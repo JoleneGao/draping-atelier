@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>立裁工坊 Draping Atelier</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════
+   DESIGN SYSTEM
+   ══════════════════════════════════════════════════════ */
+:root {
+  --bg: #FAF8F5;
+  --card: #ffffff;
+  --accent: #B8856C;
+  --accent-soft: rgba(184,133,108,0.12);
+  --accent-ghost: rgba(184,133,108,0.06);
+  --sage: #7B9E7B;
+  --sage-soft: rgba(123,158,123,0.1);
+  --text: #1a1a1a;
+  --text-mid: #555555;
+  --text-light: #999999;
+  --border: #E8E3DD;
+  --shadow: 0 2px 16px rgba(0,0,0,0.05);
+  --shadow-active: 0 4px 24px rgba(184,133,108,0.15);
+  --font-display: 'Cormorant Garamond', 'Georgia', serif;
+  --font-body: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); font-family: var(--font-body); color: var(--text); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+/* ══════════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════════ */
+@keyframes formDraw { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dotPulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+
+/* ══════════════════════════════════════════════════════
+   SCREEN: UPLOAD
+   ══════════════════════════════════════════════════════ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+.upload-screen {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 40px;
+}
+.brand { text-align: center; margin-bottom: 48px; animation: fadeUp 0.6s ease; }
+.brand h1 { font-family: var(--font-display); font-size: 52px; font-weight: 400; letter-spacing: 2px; }
+.brand .sub { font-family: var(--font-display); font-size: 18px; color: var(--text-light); font-style: italic; letter-spacing: 1px; }
+.brand .line { width: 40px; height: 1.5px; background: var(--accent); margin: 20px auto 0; }
+.brand .desc { margin-top: 20px; font-size: 15px; color: var(--text-mid); max-width: 420px; line-height: 1.7; }
+
+.drop-zone {
+  width: 100%; max-width: 480px; min-height: 280px;
+  border: 2px dashed var(--border); border-radius: 16px; padding: 40px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.3s ease; animation: fadeUp 0.6s ease 0.15s both;
+}
+.drop-zone.drag-over { border-color: var(--accent); background: var(--accent-ghost); }
+.drop-zone.has-preview { padding: 12px; min-height: auto; }
+.drop-zone .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.drop-zone .label { font-size: 15px; color: var(--text-mid); }
+.drop-zone .sublabel { font-size: 13px; color: var(--text-light); margin-top: 6px; }
+.drop-zone img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 10px; }
+
+.actions { margin-top: 24px; display: flex; gap: 14px; animation: fadeUp 0.3s ease; }
+.btn { padding: 12px 28px; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: var(--font-body); transition: all 0.2s; }
+.btn-secondary { border: 1px solid var(--border); background: transparent; color: var(--text-mid); }
+.btn-primary { border: none; background: var(--accent); color: #fff; font-weight: 600; padding: 12px 36px; }
+.btn-primary:disabled { background: var(--text-light); cursor: wait; }
+
+.footer-note { margin-top: 60px; font-size: 12px; color: var(--text-light); animation: fadeUp 0.6s ease 0.3s both; }
+
+/* ══════════════════════════════════════════════════════
+   SCREEN: LOADING
+   ══════════════════════════════════════════════════════ */
+.loading-screen {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.loading-screen .form-wrap { width: 160px; margin-bottom: 32px; animation: fadeIn 0.5s ease; }
+.loading-screen .form-wrap svg { width: 100%; }
+.loading-screen .msg { font-size: 18px; font-family: var(--font-display); letter-spacing: 1px; }
+.loading-screen .msg span:nth-child(1) { animation: dotPulse 1.2s infinite 0s; }
+.loading-screen .msg span:nth-child(2) { animation: dotPulse 1.2s infinite 0.2s; }
+.loading-screen .msg span:nth-child(3) { animation: dotPulse 1.2s infinite 0.4s; }
+.loading-screen .submsg { font-size: 13px; color: var(--text-light); margin-top: 10px; }
+
+/* ══════════════════════════════════════════════════════
+   SCREEN: TUTORIAL
+   ══════════════════════════════════════════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(250,248,245,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border); padding: 12px 32px;
+  display: flex; align-items: center; gap: 16px;
+}
+.topbar h2 { font-family: var(--font-display); font-size: 22px; font-weight: 600; flex: 1; }
+.topbar .back-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 14px; cursor: pointer; font-size: 13px; color: var(--text-mid); font-family: var(--font-body);
+}
+.difficulty { display: flex; gap: 5px; align-items: center; }
+.difficulty .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+.difficulty .dot.filled { background: var(--accent); }
+.difficulty .label { margin-left: 6px; font-size: 13px; color: var(--text-light); }
+
+.dual-panel { display: flex; max-width: 1440px; margin: 0 auto; }
+
+/* LEFT PANEL */
+.left-panel {
+  width: 380px; flex-shrink: 0; position: sticky; top: 56px;
+  height: calc(100vh - 56px); overflow-y: auto;
+  padding: 24px 20px 24px 28px; border-right: 1px solid var(--border);
+}
+.annotated-image { position: relative; border-radius: 12px; overflow: hidden; }
+.annotated-image img { width: 100%; display: block; border-radius: 12px; }
+.annotated-image .overlay { position: absolute; inset: 0; }
+.anno-dot {
+  position: absolute; transform: translate(-50%,-50%); transition: all 0.3s ease; z-index: 5;
+  width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.85); color: var(--text); font-size: 10px; font-weight: 700;
+  border: 1.5px solid var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.15); cursor: default;
+}
+.anno-dot.active {
+  width: 30px; height: 30px; font-size: 13px; z-index: 20;
+  background: var(--accent); color: #fff; border: 2px solid #fff;
+  box-shadow: 0 2px 12px rgba(184,133,108,0.4);
+}
+.form-card {
+  margin-top: 20px; background: var(--card); border-radius: 12px;
+  padding: 16px 12px; box-shadow: var(--shadow); text-align: center;
+}
+.form-card .lbl { font-size: 12px; color: var(--text-light); margin-bottom: 8px; }
+.form-card svg { width: 100%; max-width: 180px; }
+.step-nav { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.step-nav .nav-dot {
+  width: 28px; height: 28px; border-radius: 50%; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--accent-soft); color: var(--accent); transition: all 0.2s; border: none;
+}
+.step-nav .nav-dot.active { background: var(--accent); color: #fff; }
+
+/* RIGHT PANEL */
+.right-panel { flex: 1; padding: 28px 32px 60px; min-width: 0; }
+
+.overview-card {
+  background: var(--card); border-radius: var(--radius); padding: 28px;
+  margin-bottom: 24px; box-shadow: var(--shadow); animation: fadeUp 0.5s ease;
+}
+.overview-card h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 10px; }
+.overview-card .analysis { line-height: 1.8; color: var(--text-mid); font-size: 14.5px; }
+.overview-meta { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+.overview-meta .meta-item .meta-label { font-size: 11px; color: var(--text-light); }
+.overview-meta .meta-item .meta-value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+
+.list-row { display: flex; gap: 18px; margin-bottom: 28px; flex-wrap: wrap; }
+.list-card {
+  flex: 1; min-width: 260px; background: var(--card);
+  border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);
+}
+.list-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+.list-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.list-item:last-child { border-bottom: none; }
+.list-item .name { font-size: 14px; font-weight: 600; }
+.list-item .spec { font-size: 12.5px; color: var(--text-mid); margin-top: 3px; }
+.list-item .qty { font-size: 12px; color: var(--accent); margin-top: 2px; }
+
+.section-divider {
+  display: flex; align-items: center; gap: 16px; margin: 32px 0 28px;
+}
+.section-divider .line { flex: 1; height: 1px; background: var(--border); }
+.section-divider .title { font-family: var(--font-display); font-size: 18px; color: var(--accent); font-weight: 600; }
+
+/* STEP CARD */
+.step-card {
+  background: var(--card); border-radius: var(--radius); padding: 28px 28px 24px;
+  margin-bottom: 18px; border-left: 3px solid transparent;
+  box-shadow: var(--shadow); transition: all 0.35s ease;
+}
+.step-card.active { border-left-color: var(--accent); box-shadow: var(--shadow-active); }
+.step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.step-num {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  transition: all 0.3s; flex-shrink: 0;
+}
+.step-card.active .step-num { background: var(--accent); color: #fff; }
+.step-icon { font-size: 22px; }
+.step-title-wrap { flex: 1; }
+.step-title-wrap h3 { font-size: 17px; font-weight: 600; }
+.step-title-wrap .technique { font-size: 12px; color: var(--accent); }
+.area-tag {
+  font-size: 11px; color: var(--accent); background: var(--accent-ghost);
+  padding: 4px 12px; border-radius: 20px; font-weight: 500; white-space: nowrap;
+}
+.step-desc { line-height: 1.85; color: var(--text-mid); font-size: 14.5px; margin-bottom: 20px; }
+.step-content { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+.step-illustration {
+  flex: 0 0 140px; background: var(--bg); border-radius: 10px;
+  padding: 12px 8px; display: flex; justify-content: center;
+}
+.step-illustration svg { width: 100%; max-width: 180px; }
+.tips-wrap { flex: 1; min-width: 200px; }
+.tips-box {
+  background: var(--sage-soft); border-radius: 10px; padding: 14px 18px;
+  border-left: 3px solid var(--sage);
+}
+.tips-box .tips-label { font-size: 12px; font-weight: 600; color: var(--sage); margin-bottom: 6px; }
+.tips-box p { font-size: 13.5px; line-height: 1.7; color: var(--text-mid); }
+
+.trouble-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 8px; }
+.trouble-toggle {
+  background: none; border: none; cursor: pointer; display: flex;
+  align-items: center; gap: 8px; font-size: 13px; color: var(--text-light); padding: 0;
+  font-family: var(--font-body);
+}
+.trouble-toggle .arrow { display: inline-block; transition: transform 0.2s; }
+.trouble-toggle .arrow.open { transform: rotate(90deg); }
+.trouble-content { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+.trouble-content.open { max-height: 500px; padding-top: 12px; }
+.trouble-item { margin-bottom: 10px; padding-left: 8px; }
+.trouble-item .q { font-size: 13px; font-weight: 600; color: #c0392b; margin-bottom: 3px; }
+.trouble-item .a { font-size: 13px; color: var(--text-mid); padding-left: 22px; }
+
+.step-progress { text-align: right; font-size: 11px; color: var(--text-light); margin-top: 12px; }
+
+.completion { text-align: center; padding: 48px 24px; }
+.completion .emoji { font-size: 48px; margin-bottom: 16px; }
+.completion h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 8px; }
+.completion p { color: var(--text-mid); font-size: 14px; line-height: 1.7; max-width: 400px; margin: 0 auto; }
+.completion .btn-primary { margin-top: 24px; }
+
+/* ERROR TOAST */
+.error-toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: #c0392b; color: #fff; padding: 12px 24px; border-radius: 10px;
+  font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 100;
+  animation: fadeUp 0.3s ease; display: none;
+}
+.error-toast.visible { display: flex; align-items: center; gap: 12px; }
+.error-toast .close-btn {
+  background: rgba(255,255,255,0.2); border: none; color: #fff;
+  padding: 2px 10px; border-radius: 6px; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ UPLOAD SCREEN ═══════════════════════ -->
+<div id="upload-screen" class="screen active">
+  <div class="upload-screen">
+    <div class="brand">
+      <h1>立裁工坊</h1>
+      <p class="sub">Draping Atelier</p>
+      <div class="line"></div>
+      <p class="desc">上传你的设计灵感图片，AI 将为你生成详细的分步立裁操作教程</p>
+    </div>
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept="image/*" hidden>
+      <div id="drop-placeholder">
+        <div class="icon">✂️</div>
+        <p class="label">拖拽图片到这里</p>
+        <p class="sublabel">或点击选择文件 · 支持 JPG / PNG</p>
+      </div>
+      <img id="preview-img" style="display:none;" alt="preview">
+    </div>
+    <div class="actions" id="upload-actions" style="display:none;">
+      <button class="btn btn-secondary" id="btn-reselect">重新选择</button>
+      <button class="btn btn-primary" id="btn-analyze">开始分析 →</button>
+    </div>
+    <p class="footer-note">Powered by Claude · 为服装设计爱好者而生</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════ LOADING SCREEN ═══════════════════════ -->
+<div id="loading-screen" class="screen">
+  <div class="loading-screen">
+    <div class="form-wrap">
+      <svg viewBox="0 0 160 300">
+        <path d="M80,15 C80,15 93,18 93,36 L130,46 C133,50 128,58 124,72 C120,86 123,94 121,110 C119,126 109,138 108,145 C107,153 109,163 114,178 C120,193 122,204 119,218 L116,235 L44,235 C41,218 40,204 46,178 C51,163 53,153 52,145 C51,138 41,126 39,110 C37,94 40,86 36,72 C32,58 27,50 30,46 L67,36 C67,18 80,15 80,15 Z"
+          fill="none" stroke="#1a1a1a" stroke-width="1.5"
+          style="stroke-dasharray:1200;animation:formDraw 2.5s ease forwards"/>
+        <line x1="80" y1="235" x2="80" y2="272" stroke="#1a1a1a" stroke-width="1.5"/>
+        <ellipse cx="80" cy="275" rx="28" ry="6" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <p class="msg">正在分析你的设计<span>.</span><span>.</span><span>.</span></p>
+    <p class="submsg">AI 正在识别设计结构并生成立裁教程</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TUTORIAL SCREEN ═══════════════════════ -->
+<div id="tutorial-screen" class="screen">
+  <div class="topbar">
+    <button class="back-btn" id="btn-back">← 返回</button>
+    <h2 id="design-name"></h2>
+    <div class="difficulty" id="difficulty-dots"></div>
+  </div>
+  <div class="dual-panel">
+    <div class="left-panel" id="left-panel">
+      <div class="annotated-image" id="annotated-image">
+        <img id="tutorial-img" src="" alt="设计图">
+        <div class="overlay" id="anno-overlay"></div>
+      </div>
+      <div class="form-card" id="form-card">
+        <div class="lbl">当前步骤区域示意</div>
+        <div id="form-svg-container"></div>
+      </div>
+      <div class="step-nav" id="step-nav"></div>
+    </div>
+    <div class="right-panel" id="right-panel"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ERROR TOAST ═══════════════════════ -->
+<div class="error-toast" id="error-toast">
+  <span id="error-msg"></span>
+  <button class="close-btn" id="error-close">✕</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   CONSTANTS & CONFIG
+   ══════════════════════════════════════════════════════ */
+const ICONS = { pin:"📌", scissors:"✂️", pencil:"✏️", ruler:"📐", hand:"✋", fold:"🔄", iron:"🔥", measure:"📏" };
+const AREA_LABELS = { neck:"领口", shoulder:"肩部", chest:"胸部", waist:"腰部", hip:"臀部", hem:"下摆", side:"侧缝", back:"后背", full:"整体" };
+const AREA_HIGHLIGHT = {
+  neck:{y:12,h:28}, shoulder:{y:33,h:28}, chest:{y:58,h:55}, waist:{y:110,h:48},
+  hip:{y:155,h:50}, hem:{y:200,h:35}, side:{y:58,h:100,side:true}, back:{y:40,h:140}, full:{y:12,h:223}
+};
+const DIFFICULTY_LABELS = ["","入门","初级","中等","中高","高级"];
+const FORM_PATH = "M80,15 C80,15 93,18 93,36 L130,46 C133,50 128,58 124,72 C120,86 123,94 121,110 C119,126 109,138 108,145 C107,153 109,163 114,178 C120,193 122,204 119,218 L116,235 L44,235 C41,218 40,204 46,178 C51,163 53,153 52,145 C51,138 41,126 39,110 C37,94 40,86 36,72 C32,58 27,50 30,46 L67,36 C67,18 80,15 80,15 Z";
+const AREA_POS = {
+  neck:{t:"10%",l:"50%"}, shoulder:{t:"16%",l:"62%"}, chest:{t:"28%",l:"45%"},
+  waist:{t:"45%",l:"52%"}, hip:{t:"58%",l:"55%"}, hem:{t:"78%",l:"50%"},
+  side:{t:"38%",l:"80%"}, back:{t:"32%",l:"50%"}, full:{t:"42%",l:"50%"}
+};
+
+const PROMPT = `你是一位拥有20年经验的立裁（draping）大师和时装设计教育家。请分析这张立裁/服装设计图片，为零基础初学者提供一份完整的、手把手的立裁操作教程。
+
+请用中文回答。严格只返回JSON，不要有任何其他文字、markdown标记或代码块：
+{"designName":"简洁的设计名称","designAnalysis":"2-3句话描述这件设计的核心特征和整体风格","difficulty":3,"difficultyReason":"难度评估原因","estimatedTime":"预计完成时间","materials":[{"item":"材料名","spec":"规格克重质地等","qty":"用量"}],"tools":[{"name":"工具名","purpose":"用途"}],"steps":[{"title":"步骤标题","desc":"详细操作说明，用初学者能理解的语言描述手怎么放、布怎么摆、针怎么插，至少3-4句话","technique":"核心技法","icon":"pin","area":"chest","tips":"操作贴士","troubles":[{"q":"可能的问题","a":"解决方法"}]}]}
+
+要求：1.步骤详细，每步只做一个核心动作 2.通俗易懂，专业术语附解释 3.提供8-15个步骤 4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full 5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure`;
+
+/* ══════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════ */
+let fileBase64 = null;
+let fileMediaType = null;
+let previewUrl = null;
+let tutorialData = null;
+let activeStep = 0;
+let stepObservers = [];
+
+/* ══════════════════════════════════════════════════════
+   DOM REFS
+   ══════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const screens = { upload: $('upload-screen'), loading: $('loading-screen'), tutorial: $('tutorial-screen') };
+
+/* ══════════════════════════════════════════════════════
+   NAVIGATION
+   ══════════════════════════════════════════════════════ */
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════
+   SVG HELPERS
+   ══════════════════════════════════════════════════════ */
+function createFormSVG(area, num, animated) {
+  const hl = AREA_HIGHLIGHT[area] || AREA_HIGHLIGHT.full;
+  const clipId = `fc-${num||'x'}-${Math.random().toString(36).slice(2,6)}`;
+  let highlightRect;
+  if (hl.side) {
+    highlightRect = `<rect x="100" y="${hl.y}" width="60" height="${hl.h}" rx="4" fill="#B8856C" opacity="0.18" clip-path="url(#${clipId})"/>`;
+  } else {
+    highlightRect = `<rect x="0" y="${hl.y}" width="160" height="${hl.h}" rx="4" fill="#B8856C" opacity="0.18" clip-path="url(#${clipId})"/>`;
+  }
+  const pathStyle = animated ? 'stroke-dasharray:1200;animation:formDraw 2.5s ease forwards' : '';
+  const badge = num ? `<circle cx="80" cy="130" r="16" fill="#B8856C" opacity="0.9"/>
+    <text x="80" y="135" font-size="14" fill="#fff" font-family="'Cormorant Garamond',serif" font-weight="700" text-anchor="middle">${num}</text>` : '';
+
+  return `<svg viewBox="0 0 160 300" style="width:100%;max-width:180px">
+    <defs><clipPath id="${clipId}"><path d="${FORM_PATH}"/></clipPath></defs>
+    ${highlightRect}
+    <path d="${FORM_PATH}" fill="none" stroke="#1a1a1a" stroke-width="1.5" style="${pathStyle}"/>
+    <line x1="80" y1="36" x2="80" y2="235" stroke="#1a1a1a" stroke-width="0.4" stroke-dasharray="3,4" opacity="0.35"/>
+    <line x1="36" y1="90" x2="124" y2="90" stroke="#B8856C" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.5"/>
+    <line x1="50" y1="145" x2="110" y2="145" stroke="#B8856C" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.5"/>
+    <line x1="42" y1="195" x2="118" y2="195" stroke="#B8856C" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.5"/>
+    <text x="155" y="93" font-size="7" fill="#999" font-family="sans-serif" text-anchor="end">胸围线</text>
+    <text x="155" y="148" font-size="7" fill="#999" font-family="sans-serif" text-anchor="end">腰围线</text>
+    <text x="155" y="198" font-size="7" fill="#999" font-family="sans-serif" text-anchor="end">臀围线</text>
+    <line x1="80" y1="235" x2="80" y2="272" stroke="#1a1a1a" stroke-width="1.5"/>
+    <ellipse cx="80" cy="275" rx="28" ry="6" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+    ${badge}
+    <text x="80" y="256" font-size="8" fill="#B8856C" font-family="sans-serif" font-weight="600" text-anchor="middle">${AREA_LABELS[area]||""}</text>
+  </svg>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   UPLOAD HANDLING
+   ══════════════════════════════════════════════════════ */
+const dropZone = $('drop-zone');
+const fileInput = $('file-input');
+const previewImg = $('preview-img');
+const placeholder = $('drop-placeholder');
+
+function processFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  previewUrl = URL.createObjectURL(file);
+  previewImg.src = previewUrl;
+  previewImg.style.display = 'block';
+  placeholder.style.display = 'none';
+  dropZone.classList.add('has-preview');
+  $('upload-actions').style.display = 'flex';
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    fileBase64 = reader.result.split(',')[1];
+    fileMediaType = file.type;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetUpload() {
+  previewImg.style.display = 'none';
+  previewImg.src = '';
+  placeholder.style.display = 'flex';
+  dropZone.classList.remove('has-preview');
+  $('upload-actions').style.display = 'none';
+  fileBase64 = null; fileMediaType = null; previewUrl = null;
+  fileInput.value = '';
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); processFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => processFile(e.target.files[0]));
+$('btn-reselect').addEventListener('click', resetUpload);
+
+/* ══════════════════════════════════════════════════════
+   ERROR HANDLING
+   ══════════════════════════════════════════════════════ */
+function showError(msg) {
+  $('error-msg').textContent = msg;
+  $('error-toast').classList.add('visible');
+}
+$('error-close').addEventListener('click', () => $('error-toast').classList.remove('visible'));
+
+/* ══════════════════════════════════════════════════════
+   AI ANALYSIS
+   ══════════════════════════════════════════════════════ */
+async function analyze() {
+  if (!fileBase64) return;
+  $('btn-analyze').disabled = true;
+  $('btn-analyze').textContent = '分析中...';
+  showScreen('loading');
+
+  try {
+    // 调用后端代理 API（不再直接暴露 API Key）
+    const resp = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageBase64: fileBase64,
+        mediaType: fileMediaType
+      })
+    });
+
+    if (!resp.ok) {
+      const errorData = await resp.json();
+      throw new Error(errorData.error || `请求失败: ${resp.status}`);
+    }
+
+    const json = await resp.json();
+    const text = (json.content || []).map(b => b.type === "text" ? b.text : "").join("");
+    const clean = text.replace(/```json\s*|```\s*/g, "").trim();
+
+    let parsed;
+    try { parsed = JSON.parse(clean); }
+    catch { const m = clean.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); else throw new Error("无法解析 AI 返回的内容"); }
+
+    tutorialData = parsed;
+    renderTutorial();
+    showScreen('tutorial');
+  } catch (err) {
+    console.error(err);
+    showError(err.message || "分析失败，请重试");
+    showScreen('upload');
+  } finally {
+    $('btn-analyze').disabled = false;
+    $('btn-analyze').textContent = '开始分析 →';
+  }
+}
+
+$('btn-analyze').addEventListener('click', analyze);
+
+/* ══════════════════════════════════════════════════════
+   BACK BUTTON
+   ══════════════════════════════════════════════════════ */
+$('btn-back').addEventListener('click', () => {
+  stepObservers.forEach(obs => obs.disconnect());
+  stepObservers = [];
+  tutorialData = null;
+  activeStep = 0;
+  resetUpload();
+  showScreen('upload');
+});
+
+/* ══════════════════════════════════════════════════════
+   RENDER TUTORIAL
+   ══════════════════════════════════════════════════════ */
+function renderTutorial() {
+  const d = tutorialData;
+  activeStep = 0;
+
+  // Topbar
+  $('design-name').textContent = d.designName;
+  const difDots = $('difficulty-dots');
+  difDots.innerHTML = [1,2,3,4,5].map(i =>
+    `<div class="dot ${i <= d.difficulty ? 'filled' : ''}"></div>`
+  ).join('') + `<span class="label">${DIFFICULTY_LABELS[d.difficulty]||""}</span>`;
+
+  // Left panel image
+  $('tutorial-img').src = previewUrl;
+  renderAnnotations();
+  renderFormCard();
+  renderStepNav();
+
+  // Right panel
+  const rp = $('right-panel');
+  rp.innerHTML = '';
+
+  // Overview
+  rp.innerHTML += `
+    <div class="overview-card">
+      <h3>设计总览</h3>
+      <p class="analysis">${d.designAnalysis}</p>
+      <div class="overview-meta">
+        <div class="meta-item"><div class="meta-label">难度</div><div class="meta-value">${'●'.repeat(d.difficulty)}${'○'.repeat(5-d.difficulty)} ${DIFFICULTY_LABELS[d.difficulty]||""}</div></div>
+        <div class="meta-item"><div class="meta-label">预计时间</div><div class="meta-value">${d.estimatedTime}</div></div>
+        <div class="meta-item"><div class="meta-label">步骤数</div><div class="meta-value">${d.steps.length} 步</div></div>
+      </div>
+    </div>`;
+
+  // Materials + Tools
+  let matsHtml = d.materials.map(m => `
+    <div class="list-item">
+      <div class="name">${m.item}</div>
+      <div class="spec">${m.spec}</div>
+      <div class="qty">用量：${m.qty}</div>
+    </div>`).join('');
+
+  let toolsHtml = d.tools.map(t => `
+    <div class="list-item">
+      <div class="name">${t.name}</div>
+      <div class="spec">${t.purpose}</div>
+    </div>`).join('');
+
+  rp.innerHTML += `
+    <div class="list-row" style="animation:fadeUp 0.5s ease 0.1s both">
+      <div class="list-card"><h4>🧵 材料清单</h4>${matsHtml}</div>
+      <div class="list-card"><h4>🔧 工具清单</h4>${toolsHtml}</div>
+    </div>`;
+
+  // Divider
+  rp.innerHTML += `
+    <div class="section-divider">
+      <div class="line"></div>
+      <span class="title">操作步骤</span>
+      <div class="line"></div>
+    </div>`;
+
+  // Steps
+  d.steps.forEach((s, i) => {
+    const icon = ICONS[s.icon] || "📌";
+    const areaLabel = AREA_LABELS[s.area] || s.area;
+    let troublesHtml = '';
+    if (s.troubles && s.troubles.length) {
+      troublesHtml = `
+        <div class="trouble-section">
+          <button class="trouble-toggle" onclick="this.querySelector('.arrow').classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▸</span> ⚠️ 常见问题排解 (${s.troubles.length})
+          </button>
+          <div class="trouble-content">
+            ${s.troubles.map(t => `<div class="trouble-item"><p class="q">❓ ${t.q}</p><p class="a">→ ${t.a}</p></div>`).join('')}
+          </div>
+        </div>`;
+    }
+
+    rp.innerHTML += `
+      <div class="step-card" data-step="${i}" style="animation:fadeUp 0.5s ease ${i*0.06}s both">
+        <div class="step-header">
+          <div class="step-num">${i+1}</div>
+          <span class="step-icon">${icon}</span>
+          <div class="step-title-wrap">
+            <h3>${s.title}</h3>
+            ${s.technique ? `<span class="technique">技法：${s.technique}</span>` : ''}
+          </div>
+          <span class="area-tag">${areaLabel}</span>
+        </div>
+        <p class="step-desc">${s.desc}</p>
+        <div class="step-content">
+          <div class="step-illustration">${createFormSVG(s.area, i+1)}</div>
+          <div class="tips-wrap">
+            ${s.tips ? `<div class="tips-box"><div class="tips-label">💡 操作贴士</div><p>${s.tips}</p></div>` : ''}
+          </div>
+        </div>
+        ${troublesHtml}
+        <div class="step-progress">步骤 ${i+1} / ${d.steps.length}</div>
+      </div>`;
+  });
+
+  // Completion
+  rp.innerHTML += `
+    <div class="completion">
+      <div class="emoji">🎉</div>
+      <h3>教程完成！</h3>
+      <p>按照以上步骤操作，你就能在人台上实现这个设计。记得边做边拍照记录，如果遇到问题可以随时回来参考。</p>
+      <button class="btn btn-primary" onclick="document.getElementById('btn-back').click()">分析新的设计 →</button>
+    </div>`;
+
+  // Setup IntersectionObserver for step cards
+  setupStepObservers();
+}
+
+/* ══════════════════════════════════════════════════════
+   LEFT PANEL RENDERERS
+   ══════════════════════════════════════════════════════ */
+function renderAnnotations() {
+  const overlay = $('anno-overlay');
+  const steps = tutorialData.steps;
+  const usedAreas = {};
+  overlay.innerHTML = steps.map((s, i) => {
+    const pos = AREA_POS[s.area] || AREA_POS.full;
+    if (!usedAreas[s.area]) usedAreas[s.area] = 0;
+    const offset = usedAreas[s.area] * 18;
+    usedAreas[s.area]++;
+    return `<div class="anno-dot ${i === activeStep ? 'active' : ''}" data-anno="${i}"
+      style="top:calc(${pos.t} + ${offset}px);left:${pos.l}">${i+1}</div>`;
+  }).join('');
+}
+
+function renderFormCard() {
+  const area = tutorialData.steps[activeStep]?.area || 'full';
+  $('form-svg-container').innerHTML = createFormSVG(area, activeStep+1);
+}
+
+function renderStepNav() {
+  $('step-nav').innerHTML = tutorialData.steps.map((s, i) =>
+    `<button class="nav-dot ${i === activeStep ? 'active' : ''}" data-nav="${i}">${i+1}</button>`
+  ).join('');
+
+  $('step-nav').querySelectorAll('.nav-dot').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.nav);
+      const card = document.querySelector(`.step-card[data-step="${idx}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+}
+
+function updateActiveStep(idx) {
+  if (idx === activeStep) return;
+  activeStep = idx;
+
+  // Update annotations
+  document.querySelectorAll('.anno-dot').forEach(d => {
+    d.classList.toggle('active', parseInt(d.dataset.anno) === idx);
+  });
+
+  // Update form card
+  renderFormCard();
+
+  // Update nav dots
+  document.querySelectorAll('.nav-dot').forEach(d => {
+    d.classList.toggle('active', parseInt(d.dataset.nav) === idx);
+  });
+
+  // Update step cards
+  document.querySelectorAll('.step-card').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.step) === idx);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   INTERSECTION OBSERVER
+   ══════════════════════════════════════════════════════ */
+function setupStepObservers() {
+  stepObservers.forEach(obs => obs.disconnect());
+  stepObservers = [];
+
+  document.querySelectorAll('.step-card').forEach(card => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) updateActiveStep(parseInt(card.dataset.step));
+    }, { threshold: 0.4 });
+    obs.observe(card);
+    stepObservers.push(obs);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "draping-atelier",
+  "version": "1.0.0",
+  "description": "立裁工坊 - AI 驱动的服装立裁教学平台",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site, no build needed'",
+    "start": "vercel dev"
+  },
+  "keywords": [
+    "draping",
+    "fashion",
+    "ai",
+    "tutorial"
+  ],
+  "author": "",
+  "license": "MIT"
+}
