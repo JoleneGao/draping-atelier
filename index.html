@@ -526,7 +526,35 @@ async function analyze() {
 
     let parsed;
     try { parsed = JSON.parse(clean); }
-    catch { const m = clean.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); else throw new Error("无法解析 AI 返回的内容"); }
+    catch {
+      // 尝试提取最外层 JSON 对象
+      const m = clean.match(/\{[\s\S]*\}/);
+      if (m) {
+        let fixedJson = m[0];
+        // 修复常见 JSON 问题
+        fixedJson = fixedJson.replace(/,\s*([}\]])/g, '$1');           // 去除尾逗号
+        fixedJson = fixedJson.replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":'); // 补全未加引号的 key
+        fixedJson = fixedJson.replace(/:\s*'([^']*)'/g, ':"$1"');       // 单引号改双引号
+        fixedJson = fixedJson.replace(/[\x00-\x1F]/g, ' ');            // 去除控制字符
+        try { parsed = JSON.parse(fixedJson); }
+        catch {
+          // 最后尝试：截断到最后一个完整的 } 并补全
+          let depth = 0, lastValid = 0;
+          for (let i = 0; i < fixedJson.length; i++) {
+            if (fixedJson[i] === '{') depth++;
+            if (fixedJson[i] === '}') { depth--; if (depth === 0) { lastValid = i; break; } }
+          }
+          if (lastValid > 0) {
+            try { parsed = JSON.parse(fixedJson.substring(0, lastValid + 1)); }
+            catch { throw new Error("无法解析 AI 返回的内容，请重试"); }
+          } else {
+            throw new Error("无法解析 AI 返回的内容，请重试");
+          }
+        }
+      } else {
+        throw new Error("无法解析 AI 返回的内容，请重试");
+      }
+    }
 
     tutorialData = parsed;
     renderTutorial();
