@@ -467,9 +467,6 @@ $('error-close').addEventListener('click', () => $('error-toast').classList.remo
    AI ANALYSIS
    ══════════════════════════════════════════════════════ */
 
-// ⚠️ 临时开发模式：本地测试时填入 API Key，部署前删除！
-const DEV_API_KEY = ""; // 在这里填入你的 API Key 进行本地测试
-
 async function analyze() {
   if (!fileBase64) return;
   $('btn-analyze').disabled = true;
@@ -477,43 +474,35 @@ async function analyze() {
   showScreen('loading');
 
   try {
-    let resp;
+    // 1. 从后端获取 API 配置（轻量请求，不会超时）
+    const cfgResp = await fetch("/api/config");
+    const cfgText = await cfgResp.text();
+    let cfg;
+    try { cfg = JSON.parse(cfgText); }
+    catch { throw new Error("无法获取 API 配置"); }
+    if (cfg.error) throw new Error(cfg.error);
 
-    // 判断是本地开发还是已部署
-    const isLocalDev = DEV_API_KEY && (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
-
-    if (isLocalDev) {
-      // 本地开发：直接调用 Claude API（通过第三方代理）
-      resp = await fetch("https://api.neurax.xin/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": DEV_API_KEY,
-          "anthropic-version": "2023-06-01"
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
-          max_tokens: 4096,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: fileMediaType, data: fileBase64 } },
-              { type: "text", text: PROMPT }
-            ]
-          }]
-        })
-      });
-    } else {
-      // 生产环境：调用后端代理 API
-      resp = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: fileBase64,
-          mediaType: fileMediaType
-        })
-      });
-    }
+    // 2. 前端直接调用 AI API（绕过 Vercel 10 秒函数限制）
+    const resp = await fetch(`${cfg.apiBase}/v1/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": cfg.apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: cfg.model,
+        max_tokens: 4096,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: fileMediaType, data: fileBase64 } },
+            { type: "text", text: PROMPT }
+          ]
+        }]
+      })
+    });
 
     // 读取原始文本，避免非 JSON 响应导致崩溃
     const rawText = await resp.text();
@@ -524,11 +513,9 @@ async function analyze() {
     if (!resp.ok) {
       throw new Error(json.error?.message || json.error || `请求失败: ${resp.status}`);
     }
-    console.log("=== AI 原始响应 ===", JSON.stringify(json, null, 2));
+
     const text = (json.content || []).map(b => b.type === "text" ? b.text : "").join("");
-    console.log("=== 提取的文本 ===", text);
     const clean = text.replace(/```json\s*|```\s*/g, "").trim();
-    console.log("=== 清理后的文本 ===", clean.substring(0, 500));
 
     let parsed;
     try { parsed = JSON.parse(clean); }
