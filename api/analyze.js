@@ -39,8 +39,9 @@ export default async function handler(req, res) {
 
 要求：1.步骤详细，每步只做一个核心动作 2.通俗易懂，专业术语附解释 3.提供8-15个步骤 4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full 5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure`;
 
-    // 调用 Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // 调用 Claude API（通过第三方代理）
+    const apiBase = process.env.API_BASE_URL || 'https://api.anthropic.com';
+    const response = await fetch(`${apiBase}/v1/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
