@@ -1,12 +1,11 @@
-// Vercel Edge Function - Claude API 代理
-// Edge Function 在 Hobby 计划下超时为 30 秒，比 Serverless 的 10 秒更长
+// Vercel Edge Function - Claude API 代理（流式传输）
+// 使用 streaming 避免超时：边接收边转发，不等完整响应
 
 export const config = {
   runtime: 'edge',
 };
 
 export default async function handler(req) {
-  // 处理 CORS
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -19,8 +18,7 @@ export default async function handler(req) {
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: '只支持 POST 请求' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -30,8 +28,7 @@ export default async function handler(req) {
 
   if (!apiKey) {
     return new Response(JSON.stringify({ error: '服务器未配置 API Key' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -40,8 +37,7 @@ export default async function handler(req) {
 
     if (!imageBase64 || !mediaType) {
       return new Response(JSON.stringify({ error: '缺少图片数据' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -52,6 +48,7 @@ export default async function handler(req) {
 
 要求：1.步骤详细，每步只做一个核心动作 2.通俗易懂，专业术语附解释 3.提供8-15个步骤 4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full 5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure`;
 
+    // 使用 streaming 模式调用 API
     const response = await fetch(`${apiBase}/v1/messages`, {
       method: 'POST',
       headers: {
@@ -62,6 +59,7 @@ export default async function handler(req) {
       body: JSON.stringify({
         model,
         max_tokens: 4096,
+        stream: true,
         messages: [
           {
             role: 'user',
@@ -74,15 +72,14 @@ export default async function handler(req) {
       }),
     });
 
-    const responseText = await response.text();
-
     if (!response.ok) {
+      const errorText = await response.text();
       let errorMsg = '调用 AI 服务失败';
       try {
-        const errorData = JSON.parse(responseText);
+        const errorData = JSON.parse(errorText);
         errorMsg = errorData.error?.message || errorData.error || errorMsg;
       } catch {
-        errorMsg = responseText.substring(0, 200) || errorMsg;
+        errorMsg = errorText.substring(0, 200) || errorMsg;
       }
       return new Response(JSON.stringify({ error: errorMsg }), {
         status: response.status,
@@ -90,7 +87,50 @@ export default async function handler(req) {
       });
     }
 
-    return new Response(responseText, {
+    // 流式读取所有 SSE 数据，拼接文本后返回完整 JSON
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let inputTokens = 0;
+    let outputTokens = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const event = JSON.parse(data);
+
+          if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+            fullText += event.delta.text;
+          }
+          if (event.type === 'message_start' && event.message?.usage) {
+            inputTokens = event.message.usage.input_tokens || 0;
+          }
+          if (event.type === 'message_delta' && event.usage) {
+            outputTokens = event.usage.output_tokens || 0;
+          }
+        } catch {
+          // 忽略无法解析的行
+        }
+      }
+    }
+
+    // 构造与非流式 API 兼容的响应格式
+    const result = {
+      content: [{ type: 'text', text: fullText }],
+      usage: { input_tokens: inputTokens, output_tokens: outputTokens },
+    };
+
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
