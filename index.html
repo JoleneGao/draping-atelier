@@ -466,6 +466,10 @@ $('error-close').addEventListener('click', () => $('error-toast').classList.remo
 /* ══════════════════════════════════════════════════════
    AI ANALYSIS
    ══════════════════════════════════════════════════════ */
+
+// ⚠️ 临时开发模式：本地测试时填入 API Key，部署前删除！
+const DEV_API_KEY = ""; // 在这里填入你的 API Key 进行本地测试
+
 async function analyze() {
   if (!fileBase64) return;
   $('btn-analyze').disabled = true;
@@ -473,19 +477,47 @@ async function analyze() {
   showScreen('loading');
 
   try {
-    // 调用后端代理 API（不再直接暴露 API Key）
-    const resp = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageBase64: fileBase64,
-        mediaType: fileMediaType
-      })
-    });
+    let resp;
+
+    // 判断是本地开发还是已部署
+    const isLocalDev = DEV_API_KEY && (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+    if (isLocalDev) {
+      // 本地开发：直接调用 Claude API
+      resp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": DEV_API_KEY,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 4096,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: fileMediaType, data: fileBase64 } },
+              { type: "text", text: PROMPT }
+            ]
+          }]
+        })
+      });
+    } else {
+      // 生产环境：调用后端代理 API
+      resp = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: fileBase64,
+          mediaType: fileMediaType
+        })
+      });
+    }
 
     if (!resp.ok) {
       const errorData = await resp.json();
-      throw new Error(errorData.error || `请求失败: ${resp.status}`);
+      throw new Error(errorData.error?.message || errorData.error || `请求失败: ${resp.status}`);
     }
 
     const json = await resp.json();
