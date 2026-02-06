@@ -474,33 +474,13 @@ async function analyze() {
   showScreen('loading');
 
   try {
-    // 1. 从后端获取 API 配置（轻量请求，不会超时）
-    const cfgResp = await fetch("/api/config");
-    const cfgText = await cfgResp.text();
-    let cfg;
-    try { cfg = JSON.parse(cfgText); }
-    catch { throw new Error("无法获取 API 配置"); }
-    if (cfg.error) throw new Error(cfg.error);
-
-    // 2. 前端直接调用 AI API（绕过 Vercel 10 秒函数限制）
-    const resp = await fetch(`${cfg.apiBase}/v1/messages`, {
+    // 调用后端 Edge Function 代理（30 秒超时）
+    const resp = await fetch("/api/analyze", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": cfg.apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: cfg.model,
-        max_tokens: 4096,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: fileMediaType, data: fileBase64 } },
-            { type: "text", text: PROMPT }
-          ]
-        }]
+        imageBase64: fileBase64,
+        mediaType: fileMediaType
       })
     });
 

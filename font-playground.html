@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNCUT — Font Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Spectral:ital,wght@0,300;0,400;0,700;1,300&family=Fraunces:ital,wght@0,300;0,400;0,700;1,300&family=Space+Grotesk:wght@300;400;700&family=Syne:wght@400;700;800&family=Outfit:wght@200;400;700&family=Inter:wght@200;400;700&family=Archivo:wght@200;400;700;900&family=Bebas+Neue&family=Oswald:wght@300;400;700&family=Montserrat:wght@200;400;700&family=Raleway:wght@200;400;700&family=Didact+Gothic&family=Poiret+One&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f5f0eb;
+    color: #2a2a2a;
+    font-family: 'Inter', sans-serif;
+    padding: 40px 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .header h1 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 200;
+    font-size: 14px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 10px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #aaa;
+    letter-spacing: 1px;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+  }
+  .controls label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .controls select, .controls input[type="range"] {
+    border: 1px solid #ddd;
+    background: white;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .controls input[type="range"] {
+    width: 120px;
+  }
+  .controls input[type="color"] {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 2px;
+  }
+
+  .grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .font-card {
+    background: white;
+    border-radius: 12px;
+    padding: 40px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+  }
+  .font-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  }
+  .font-card.selected {
+    border-color: #c9a87c;
+    box-shadow: 0 8px 30px rgba(201, 168, 124, 0.2);
+  }
+
+  .font-card .title {
+    font-size: 56px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .font-card .subtitle {
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: #c9a87c;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+  }
+
+  .font-card .font-name {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #bbb;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-card .tag {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+  }
+  .tag.serif { background: #f0e8df; color: #a68a64; }
+  .tag.sans { background: #e8edf0; color: #6488a6; }
+  .tag.display { background: #f0e8ef; color: #a664a0; }
+
+  .font-card .check {
+    display: none;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 24px;
+    height: 24px;
+    background: #c9a87c;
+    border-radius: 50%;
+    color: white;
+    font-size: 14px;
+    line-height: 24px;
+  }
+  .font-card.selected .check {
+    display: block;
+  }
+
+  /* Preview section */
+  .preview-section {
+    max-width: 1200px;
+    margin: 60px auto 0;
+    background: white;
+    border-radius: 16px;
+    padding: 60px 40px;
+    text-align: center;
+  }
+  .preview-section .preview-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #bbb;
+    margin-bottom: 30px;
+  }
+  .preview-section .preview-title {
+    font-size: 72px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+  }
+  .preview-section .preview-subtitle {
+    font-size: 16px;
+    letter-spacing: 6px;
+    color: #c9a87c;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
+  .preview-section .preview-desc {
+    font-size: 14px;
+    color: #999;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.8;
+  }
+
+  .dark-preview {
+    background: #1a1a1a !important;
+  }
+  .dark-preview .preview-label { color: #555; }
+  .dark-preview .preview-title { color: #f5f0eb; }
+  .dark-preview .preview-desc { color: #666; }
+
+  .preview-toggles {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .preview-toggles button {
+    padding: 8px 20px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 20px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+  .preview-toggles button:hover {
+    border-color: #c9a87c;
+    color: #c9a87c;
+  }
+  .preview-toggles button.active {
+    background: #2a2a2a;
+    color: white;
+    border-color: #2a2a2a;
+  }
+
+  @media (max-width: 768px) {
+    .grid { grid-template-columns: 1fr; }
+    .font-card .title { font-size: 42px; }
+    .preview-section .preview-title { font-size: 48px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Font Playground</h1>
+  <p>Click a card to preview · Choose the perfect typeface for UNCUT</p>
+</div>
+
+<div class="controls">
+  <label>
+    Letter Spacing
+    <input type="range" id="spacing" min="-2" max="30" value="8" step="1">
+  </label>
+  <label>
+    Weight
+    <select id="weight">
+      <option value="200">Thin</option>
+      <option value="300">Light</option>
+      <option value="400" selected>Regular</option>
+      <option value="600">Semi Bold</option>
+      <option value="700">Bold</option>
+      <option value="800">Extra Bold</option>
+    </select>
+  </label>
+  <label>
+    Case
+    <select id="textcase">
+      <option value="uppercase" selected>UPPERCASE</option>
+      <option value="none">Capitalize</option>
+      <option value="lowercase">lowercase</option>
+    </select>
+  </label>
+  <label>
+    Bg Color
+    <input type="color" id="bgcolor" value="#f5f0eb">
+  </label>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="preview-section" id="preview">
+  <div class="preview-label">Live Preview</div>
+  <div class="preview-title" id="preview-title">UNCUT</div>
+  <div class="preview-subtitle">AI-Powered Draping Guide</div>
+  <div class="preview-desc">Upload your design inspiration, AI generates step-by-step draping tutorials for you.</div>
+  <div class="preview-toggles">
+    <button class="active" onclick="toggleBg(this, 'light')">Light</button>
+    <button onclick="toggleBg(this, 'dark')">Dark</button>
+  </div>
+</div>
+
+<script>
+const fonts = [
+  { family: 'Playfair Display', tag: 'serif', note: 'Elegant & editorial' },
+  { family: 'Cormorant Garamond', tag: 'serif', note: 'Refined & delicate' },
+  { family: 'EB Garamond', tag: 'serif', note: 'Classic & timeless' },
+  { family: 'Bodoni Moda', tag: 'serif', note: 'Fashion & luxury' },
+  { family: 'DM Serif Display', tag: 'display', note: 'Modern serif display' },
+  { family: 'Libre Baskerville', tag: 'serif', note: 'Readable elegance' },
+  { family: 'Lora', tag: 'serif', note: 'Warm & balanced' },
+  { family: 'Spectral', tag: 'serif', note: 'Sharp & precise' },
+  { family: 'Fraunces', tag: 'serif', note: 'Soft & expressive' },
+  { family: 'Space Grotesk', tag: 'sans', note: 'Geometric & clean' },
+  { family: 'Syne', tag: 'sans', note: 'Bold & artistic' },
+  { family: 'Outfit', tag: 'sans', note: 'Minimal & modern' },
+  { family: 'Archivo', tag: 'sans', note: 'Strong & industrial' },
+  { family: 'Bebas Neue', tag: 'display', note: 'Tall & impactful' },
+  { family: 'Oswald', tag: 'sans', note: 'Condensed & powerful' },
+  { family: 'Montserrat', tag: 'sans', note: 'Versatile & chic' },
+  { family: 'Raleway', tag: 'sans', note: 'Thin & sophisticated' },
+  { family: 'Didact Gothic', tag: 'sans', note: 'Simple & approachable' },
+  { family: 'Poiret One', tag: 'display', note: 'Art Deco & unique' },
+  { family: 'Inter', tag: 'sans', note: 'Neutral & universal' },
+];
+
+const grid = document.getElementById('grid');
+const previewTitle = document.getElementById('preview-title');
+const spacingInput = document.getElementById('spacing');
+const weightSelect = document.getElementById('weight');
+const caseSelect = document.getElementById('textcase');
+const bgInput = document.getElementById('bgcolor');
+
+let selectedCard = null;
+let displayText = 'UNCUT';
+
+function getTextByCase() {
+  const c = caseSelect.value;
+  if (c === 'uppercase') return 'UNCUT';
+  if (c === 'lowercase') return 'uncut';
+  return 'Uncut';
+}
+
+function updateAll() {
+  const spacing = spacingInput.value + 'px';
+  const weight = weightSelect.value;
+  const textCase = caseSelect.value;
+  displayText = getTextByCase();
+
+  document.querySelectorAll('.font-card .title').forEach(el => {
+    el.style.letterSpacing = spacing;
+    el.style.fontWeight = weight;
+    el.style.textTransform = textCase;
+    el.textContent = displayText;
+  });
+
+  previewTitle.style.letterSpacing = spacing;
+  previewTitle.style.fontWeight = weight;
+  previewTitle.style.textTransform = textCase;
+  previewTitle.textContent = displayText;
+
+  document.body.style.background = bgInput.value;
+}
+
+spacingInput.addEventListener('input', updateAll);
+weightSelect.addEventListener('change', updateAll);
+caseSelect.addEventListener('change', updateAll);
+bgInput.addEventListener('input', updateAll);
+
+fonts.forEach((f, i) => {
+  const card = document.createElement('div');
+  card.className = 'font-card';
+  card.innerHTML = `
+    <div class="check">✓</div>
+    <span class="tag ${f.tag}">${f.tag}</span>
+    <div class="title" style="font-family:'${f.family}', serif; letter-spacing:8px; text-transform:uppercase;">${displayText}</div>
+    <div class="subtitle">${f.note}</div>
+    <div class="font-name">${f.family}</div>
+  `;
+  card.addEventListener('click', () => {
+    if (selectedCard) selectedCard.classList.remove('selected');
+    card.classList.add('selected');
+    selectedCard = card;
+    previewTitle.style.fontFamily = `'${f.family}', serif`;
+  });
+  grid.appendChild(card);
+});
+
+function toggleBg(btn, mode) {
+  document.querySelectorAll('.preview-toggles button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const preview = document.getElementById('preview');
+  if (mode === 'dark') {
+    preview.classList.add('dark-preview');
+  } else {
+    preview.classList.remove('dark-preview');
+  }
+}
+</script>
+</body>
+</html>
