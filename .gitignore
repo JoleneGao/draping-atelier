@@ -5,6 +5,7 @@
 
 # Vercel
 .vercel
+public/
 
 # Node modules
 node_modules/
