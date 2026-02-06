@@ -515,12 +515,15 @@ async function analyze() {
       });
     }
 
-    if (!resp.ok) {
-      const errorData = await resp.json();
-      throw new Error(errorData.error?.message || errorData.error || `请求失败: ${resp.status}`);
-    }
+    // 读取原始文本，避免非 JSON 响应导致崩溃
+    const rawText = await resp.text();
+    let json;
+    try { json = JSON.parse(rawText); }
+    catch { throw new Error(rawText.substring(0, 200) || `请求失败: ${resp.status}`); }
 
-    const json = await resp.json();
+    if (!resp.ok) {
+      throw new Error(json.error?.message || json.error || `请求失败: ${resp.status}`);
+    }
     const text = (json.content || []).map(b => b.type === "text" ? b.text : "").join("");
     const clean = text.replace(/```json\s*|```\s*/g, "").trim();
 

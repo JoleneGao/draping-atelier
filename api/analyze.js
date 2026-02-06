@@ -73,15 +73,29 @@ export default async function handler(req, res) {
       }),
     });
 
+    // 读取原始响应文本
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Claude API Error:', errorData);
-      return res.status(response.status).json({
-        error: errorData.error?.message || '调用 AI 服务失败'
-      });
+      console.error('Claude API Error:', response.status, responseText);
+      let errorMsg = '调用 AI 服务失败';
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMsg = errorData.error?.message || errorData.error || errorMsg;
+      } catch {
+        errorMsg = responseText.substring(0, 200) || errorMsg;
+      }
+      return res.status(response.status).json({ error: errorMsg });
     }
 
-    const data = await response.json();
+    // 解析响应 JSON
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      console.error('Invalid JSON from API:', responseText.substring(0, 500));
+      return res.status(502).json({ error: 'AI 服务返回了无效的响应格式' });
+    }
 
     // 返回结果给前端
     return res.status(200).json(data);
