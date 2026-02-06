@@ -1,45 +1,28 @@
-// Vercel Edge Function - Claude API 代理（流式传输）
-// 使用 streaming 避免超时：边接收边转发，不等完整响应
+// Vercel Serverless Function - Claude API 代理
+// Pro 计划支持最长 300 秒超时
 
 export const config = {
-  runtime: 'edge',
+  maxDuration: 300,
 };
 
-export default async function handler(req) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+export default async function handler(req, res) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers: corsHeaders });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: '只支持 POST 请求' }), {
-      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: '只支持 POST 请求' });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const apiBase = process.env.API_BASE_URL || 'https://api.anthropic.com';
   const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929';
 
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: '服务器未配置 API Key' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  if (!apiKey) return res.status(500).json({ error: '服务器未配置 API Key' });
 
   try {
-    const { imageBase64, mediaType } = await req.json();
-
-    if (!imageBase64 || !mediaType) {
-      return new Response(JSON.stringify({ error: '缺少图片数据' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const { imageBase64, mediaType } = req.body;
+    if (!imageBase64 || !mediaType) return res.status(400).json({ error: '缺少图片数据' });
 
     const PROMPT = `你是一位拥有20年经验的立裁（draping）大师和时装设计教育家。请分析这张立裁/服装设计图片，为零基础初学者提供一份完整的、手把手的立裁操作教程。
 
@@ -48,7 +31,6 @@ export default async function handler(req) {
 
 要求：1.步骤详细，每步只做一个核心动作 2.通俗易懂，专业术语附解释 3.提供8-15个步骤 4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full 5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure`;
 
-    // 使用 streaming 模式调用 API
     const response = await fetch(`${apiBase}/v1/messages`, {
       method: 'POST',
       headers: {
@@ -59,86 +41,40 @@ export default async function handler(req) {
       body: JSON.stringify({
         model,
         max_tokens: 4096,
-        stream: true,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
-              { type: 'text', text: PROMPT },
-            ],
-          },
-        ],
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
+            { type: 'text', text: PROMPT },
+          ],
+        }],
       }),
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const errorText = await response.text();
       let errorMsg = '调用 AI 服务失败';
       try {
-        const errorData = JSON.parse(errorText);
+        const errorData = JSON.parse(responseText);
         errorMsg = errorData.error?.message || errorData.error || errorMsg;
       } catch {
-        errorMsg = errorText.substring(0, 200) || errorMsg;
+        errorMsg = responseText.substring(0, 200) || errorMsg;
       }
-      return new Response(JSON.stringify({ error: errorMsg }), {
-        status: response.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return res.status(response.status).json({ error: errorMsg });
     }
 
-    // 流式读取所有 SSE 数据，拼接文本后返回完整 JSON
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let inputTokens = 0;
-    let outputTokens = 0;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-
-        try {
-          const event = JSON.parse(data);
-
-          if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-            fullText += event.delta.text;
-          }
-          if (event.type === 'message_start' && event.message?.usage) {
-            inputTokens = event.message.usage.input_tokens || 0;
-          }
-          if (event.type === 'message_delta' && event.usage) {
-            outputTokens = event.usage.output_tokens || 0;
-          }
-        } catch {
-          // 忽略无法解析的行
-        }
-      }
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      return res.status(502).json({ error: 'AI 服务返回了无效的响应格式' });
     }
 
-    // 构造与非流式 API 兼容的响应格式
-    const result = {
-      content: [{ type: 'text', text: fullText }],
-      usage: { input_tokens: inputTokens, output_tokens: outputTokens },
-    };
-
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return res.status(200).json(data);
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: '服务器内部错误: ' + error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Server Error:', error);
+    return res.status(500).json({ error: '服务器内部错误: ' + error.message });
   }
 }
