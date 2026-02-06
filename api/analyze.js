@@ -1,11 +1,7 @@
 // Vercel Serverless Function - Claude API 代理
 // 用于隐藏 API Key，安全调用 Claude API
 
-export const config = {
-  maxDuration: 60, // 最大执行时间 60 秒
-};
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -93,4 +89,4 @@ export default async function handler(req, res) {
     console.error('Server Error:', error);
     return res.status(500).json({ error: '服务器内部错误: ' + error.message });
   }
-}
+};
