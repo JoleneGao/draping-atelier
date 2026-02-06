@@ -524,8 +524,11 @@ async function analyze() {
     if (!resp.ok) {
       throw new Error(json.error?.message || json.error || `请求失败: ${resp.status}`);
     }
+    console.log("=== AI 原始响应 ===", JSON.stringify(json, null, 2));
     const text = (json.content || []).map(b => b.type === "text" ? b.text : "").join("");
+    console.log("=== 提取的文本 ===", text);
     const clean = text.replace(/```json\s*|```\s*/g, "").trim();
+    console.log("=== 清理后的文本 ===", clean.substring(0, 500));
 
     let parsed;
     try { parsed = JSON.parse(clean); }
