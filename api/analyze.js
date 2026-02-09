@@ -259,22 +259,16 @@ export default async function handler(req, res) {
       ],
     });
 
-    const OFFICIAL_API = 'https://api.anthropic.com';
-    // 尝试顺序：先用配置的地址，失败则 fallback 到官方 API
-    const endpoints = [apiBase];
-    if (apiBase !== OFFICIAL_API) endpoints.push(OFFICIAL_API);
-
+    // 带重试的 fetch（最多 2 次，同一 endpoint）
+    const apiUrl = apiBase + '/v1/messages';
     let response;
-    let lastError = null;
-    for (let ei = 0; ei < endpoints.length; ei++) {
-      const url = endpoints[ei] + '/v1/messages';
-      console.log(`Trying endpoint ${ei + 1}/${endpoints.length}: ${endpoints[ei]}`);
-
+    for (let attempt = 1; attempt <= 2; attempt++) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 150000);
+      console.log(`Fetch attempt ${attempt}, endpoint: ${apiBase}`);
 
       try {
-        response = await fetch(url, {
+        response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -285,24 +279,18 @@ export default async function handler(req, res) {
           body: requestBody,
         });
         clearTimeout(timeout);
-        console.log(`Endpoint ${endpoints[ei]} responded with status ${response.status}`);
-        break; // 成功连接
+        console.log(`Response status: ${response.status}`);
+        break;
       } catch (fetchErr) {
         clearTimeout(timeout);
-        lastError = fetchErr;
-        console.error(`Endpoint ${endpoints[ei]} failed:`, fetchErr.message);
+        console.error(`Attempt ${attempt} failed:`, fetchErr.message);
         if (fetchErr.name === 'AbortError') {
-          // 超时了，如果还有下一个 endpoint 则继续
-          if (ei === endpoints.length - 1) {
-            return res.status(504).json({ error: 'AI 服务响应超时，请稍后重试或更换较小的图片' });
-          }
-          continue;
+          return res.status(504).json({ error: 'AI 服务响应超时（150秒），请稍后重试或更换较小的图片' });
         }
-        if (ei === endpoints.length - 1) {
-          return res.status(502).json({ error: '无法连接到 AI 服务，请稍后重试' });
+        if (attempt === 2) {
+          return res.status(502).json({ error: '无法连接到 AI 服务（' + apiBase + '），请检查 API_BASE_URL 配置或稍后重试' });
         }
-        // 还有 fallback，等 1 秒再试
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 2000));
       }
     }
 
