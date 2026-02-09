@@ -187,6 +187,85 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
   background: rgba(255,255,255,0.2); border: none; color: #fff;
   padding: 2px 10px; border-radius: 6px; cursor: pointer;
 }
+
+/* ====== TOC 悬浮目录 ====== */
+.toc-fab {
+  position: fixed; bottom: 28px; left: 28px; z-index: 80;
+  background: var(--accent); color: #fff; border: none; border-radius: 12px;
+  padding: 10px 18px; font-size: 14px; font-family: var(--font-body);
+  cursor: pointer; box-shadow: 0 4px 20px rgba(184,133,108,0.35);
+  transition: all 0.25s ease; display: none;
+}
+.toc-fab:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(184,133,108,0.45); }
+.toc-panel {
+  position: fixed; bottom: 78px; left: 28px; z-index: 80;
+  width: 260px; max-height: 420px; overflow-y: auto;
+  background: var(--card); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 1px solid var(--border); padding: 12px 0;
+  transform: translateY(12px); opacity: 0; pointer-events: none;
+  transition: all 0.25s ease; display: none;
+}
+.toc-panel.visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+.toc-panel .toc-title {
+  padding: 4px 18px 10px; font-size: 13px; font-weight: 600;
+  color: var(--text-light); border-bottom: 1px solid var(--border);
+}
+.toc-panel .toc-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer; font-size: 13.5px;
+  color: var(--text-mid); transition: all 0.15s; border-left: 3px solid transparent;
+}
+.toc-panel .toc-item:hover { background: var(--accent-ghost); color: var(--text); }
+.toc-panel .toc-item.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.toc-panel .toc-item .toc-num {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--accent-ghost);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--accent); flex-shrink: 0;
+}
+.toc-panel .toc-item.active .toc-num { background: var(--accent); color: #fff; }
+
+/* ====== 设计图预览 + Lightbox ====== */
+.design-thumb {
+  position: fixed; top: 68px; right: 24px; z-index: 70;
+  width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
+  border: 2px solid var(--border); cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: all 0.25s ease;
+  display: none; background: var(--card);
+}
+.design-thumb:hover { transform: scale(1.08); box-shadow: 0 4px 20px rgba(0,0,0,0.14); border-color: var(--accent); }
+.design-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.lightbox-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 200; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.lightbox-overlay.visible { opacity: 1; pointer-events: auto; }
+.lightbox-overlay img {
+  max-width: 88vw; max-height: 88vh; object-fit: contain;
+  border-radius: 12px; box-shadow: 0 8px 48px rgba(0,0,0,0.4);
+}
+.lightbox-close {
+  position: absolute; top: 20px; right: 24px;
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  font-size: 28px; width: 44px; height: 44px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
+/* ====== 人台 SVG 示意图 ====== */
+.step-body { display: flex; gap: 18px; align-items: flex-start; }
+.step-text { flex: 1; min-width: 0; }
+.step-mannequin { width: 72px; flex-shrink: 0; }
+.step-mannequin svg { width: 100%; height: auto; }
+@media (max-width: 580px) {
+  .step-body { flex-direction: column-reverse; align-items: center; }
+  .step-mannequin { width: 60px; }
+  .toc-fab { bottom: 16px; left: 16px; padding: 8px 14px; font-size: 13px; }
+  .toc-panel { bottom: 64px; left: 16px; width: 240px; max-height: 340px; }
+  .design-thumb { top: 62px; right: 12px; width: 44px; height: 44px; }
+}
 </style>
 </head>
 <body>
@@ -244,6 +323,21 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
   <div class="tutorial-content">
     <div class="right-panel" id="right-panel"></div>
   </div>
+  <!-- TOC 悬浮目录 -->
+  <button class="toc-fab" id="toc-fab">&#9776; 步骤目录</button>
+  <div class="toc-panel" id="toc-panel">
+    <div class="toc-title">&#128209; 步骤目录</div>
+    <div id="toc-list"></div>
+  </div>
+  <!-- 设计图缩略图 -->
+  <div class="design-thumb" id="design-thumb">
+    <img id="design-thumb-img" alt="设计图" />
+  </div>
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox-overlay">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
+    <img id="lightbox-img" alt="设计图大图" />
+  </div>
 </div>
 
 <!-- ERROR -->
@@ -258,10 +352,26 @@ var ICONS = { pin:"\uD83D\uDCCC", scissors:"\u2702\uFE0F", pencil:"\u270F\uFE0F"
 var AREA_LABELS = { neck:"\u9886\u53E3", shoulder:"\u80A9\u90E8", chest:"\u80F8\u90E8", waist:"\u8170\u90E8", hip:"\u81C0\u90E8", hem:"\u4E0B\u6446", side:"\u4FA7\u7F1D", back:"\u540E\u80CC", full:"\u6574\u4F53" };
 var DIF_LABELS = ["","入门","初级","中等","中高","高级"];
 
+/* ====== MANNEQUIN SVG 数据 ====== */
+var MANNEQUIN_PATH = 'M80,15 C80,15 93,18 93,36 L130,46 C133,50 128,58 124,72 C120,86 123,94 121,110 C119,126 109,138 108,145 C107,153 109,163 114,178 C120,193 122,204 119,218 L116,235 L44,235 C41,218 40,204 46,178 C51,163 53,153 52,145 C51,138 41,126 39,110 C37,94 40,86 36,72 C32,58 27,50 30,46 L67,36 C67,18 80,15 80,15 Z';
+var AREA_REGIONS = {
+  neck:      { path:'M67,30 C67,30 72,25 80,25 C88,25 93,30 93,30 L93,42 L67,42 Z', color:'#E8856C' },
+  shoulder:  { path:'M30,46 L67,36 L67,50 L30,54 Z M93,36 L130,46 L130,54 L93,50 Z', color:'#D4A574' },
+  chest:     { path:'M36,54 L124,54 L124,90 L36,90 Z', color:'#C9927A' },
+  waist:     { path:'M39,100 L121,100 L121,128 L39,128 Z', color:'#B8856C' },
+  hip:       { path:'M46,155 L114,155 L119,200 L41,200 Z', color:'#D4A574' },
+  hem:       { path:'M44,215 L116,215 L116,235 L44,235 Z', color:'#C9927A' },
+  side:      { path:'M30,46 L40,46 L39,180 L41,235 L44,235 L46,180 L36,72 L30,46 Z M130,46 L120,46 L121,180 L119,235 L116,235 L114,180 L124,72 L130,46 Z', color:'#E8A080' },
+  back:      { path:'M52,60 L108,60 L108,145 L52,145 Z', color:'#D4B8A0' },
+  full:      { path:'M30,46 L67,36 C67,18 80,15 80,15 C80,15 93,18 93,36 L130,46 C133,50 128,58 124,72 C120,86 123,94 121,110 C119,126 109,138 108,145 C107,153 109,163 114,178 C120,193 122,204 119,218 L116,235 L44,235 C41,218 40,204 46,178 C51,163 53,153 52,145 C51,138 41,126 39,110 C37,94 40,86 36,72 C32,58 27,50 30,46 Z', color:'#E8D0C0' }
+};
+
 /* ====== STATE ====== */
 var fileBase64 = null;
 var fileMediaType = null;
 var tutorialData = null;
+var uploadedImageUrl = null;
+var tocObserver = null;
 
 /* ====== HELPERS ====== */
 function $(id) { return document.getElementById(id); }
@@ -317,7 +427,10 @@ var placeholder = $('drop-placeholder');
 
 function processFile(file) {
   if (!file || !file.type.startsWith('image/')) return;
-  previewImg.src = URL.createObjectURL(file);
+  // 释放旧的 blob URL
+  if (uploadedImageUrl) URL.revokeObjectURL(uploadedImageUrl);
+  uploadedImageUrl = URL.createObjectURL(file);
+  previewImg.src = uploadedImageUrl;
   previewImg.style.display = 'block';
   placeholder.style.display = 'none';
   dropZone.classList.add('has-preview');
@@ -405,9 +518,144 @@ $('btn-analyze').addEventListener('click', analyze);
 /* ====== BACK ====== */
 $('btn-back').addEventListener('click', function() {
   tutorialData = null;
+  // 清理 TOC observer
+  if (tocObserver) { tocObserver.disconnect(); tocObserver = null; }
+  // 隐藏浮动元素
+  $('toc-fab').style.display = 'none';
+  $('toc-panel').style.display = 'none';
+  $('toc-panel').classList.remove('visible');
+  $('design-thumb').style.display = 'none';
+  $('lightbox-overlay').classList.remove('visible');
+  // 释放图片内存
+  if (uploadedImageUrl) { URL.revokeObjectURL(uploadedImageUrl); uploadedImageUrl = null; }
+  $('design-thumb-img').src = '';
+  $('lightbox-img').src = '';
   resetUpload();
   showScreen('upload');
 });
+
+/* ====== MANNEQUIN SVG BUILDER ====== */
+function buildMannequinSVG(area, stepNum) {
+  var region = AREA_REGIONS[area] || AREA_REGIONS['full'];
+  var svg = '<svg viewBox="0 0 160 260" xmlns="http://www.w3.org/2000/svg">';
+  // 高亮区域
+  svg += '<path d="' + region.path + '" fill="' + region.color + '" opacity="0.35"/>';
+  // 人台轮廓
+  svg += '<path d="' + MANNEQUIN_PATH + '" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>';
+  // 底座
+  svg += '<line x1="80" y1="235" x2="80" y2="252" stroke="#1a1a1a" stroke-width="1.2"/>';
+  svg += '<ellipse cx="80" cy="255" rx="24" ry="5" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>';
+  // 步骤序号标记
+  svg += '<circle cx="130" cy="24" r="14" fill="' + region.color + '" opacity="0.9"/>';
+  svg += '<text x="130" y="29" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">' + stepNum + '</text>';
+  svg += '</svg>';
+  return svg;
+}
+
+/* ====== TOC INIT ====== */
+function initStepTOC() {
+  var tocFab = $('toc-fab');
+  var tocPanel = $('toc-panel');
+  var tocList = $('toc-list');
+  if (!tutorialData || !tutorialData.steps) return;
+
+  var steps = tutorialData.steps;
+  // 生成目录列表
+  var listHtml = '';
+  for (var i = 0; i < steps.length; i++) {
+    listHtml += '<div class="toc-item" data-step="' + i + '">';
+    listHtml += '<span class="toc-num">' + (i + 1) + '</span>';
+    listHtml += '<span>' + (steps[i].title || '步骤 ' + (i + 1)) + '</span>';
+    listHtml += '</div>';
+  }
+  tocList.innerHTML = listHtml;
+
+  // 显示按钮
+  tocFab.style.display = 'block';
+  tocPanel.style.display = 'block';
+
+  // 切换面板
+  tocFab.onclick = function() {
+    tocPanel.classList.toggle('visible');
+  };
+
+  // 点击面板外关闭
+  document.addEventListener('click', function(e) {
+    if (!tocPanel.contains(e.target) && e.target !== tocFab) {
+      tocPanel.classList.remove('visible');
+    }
+  });
+
+  // 点击步骤滚动
+  tocList.onclick = function(e) {
+    var item = e.target.closest('.toc-item');
+    if (!item) return;
+    var idx = parseInt(item.getAttribute('data-step'), 10);
+    var cards = document.querySelectorAll('.step-card');
+    if (cards[idx]) {
+      cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      tocPanel.classList.remove('visible');
+    }
+  };
+
+  // IntersectionObserver 追踪当前步骤
+  if (tocObserver) tocObserver.disconnect();
+  var items = tocList.querySelectorAll('.toc-item');
+  tocObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var idx = parseInt(entry.target.getAttribute('data-step-idx'), 10);
+        for (var j = 0; j < items.length; j++) {
+          items[j].classList.toggle('active', j === idx);
+        }
+      }
+    });
+  }, { rootMargin: '-30% 0px -50% 0px', threshold: 0.1 });
+
+  setTimeout(function() {
+    var cards = document.querySelectorAll('.step-card');
+    cards.forEach(function(card, ci) {
+      card.setAttribute('data-step-idx', ci);
+      tocObserver.observe(card);
+    });
+  }, 100);
+}
+
+/* ====== DESIGN PREVIEW + LIGHTBOX ====== */
+function initDesignPreview() {
+  var thumb = $('design-thumb');
+  var thumbImg = $('design-thumb-img');
+  var overlay = $('lightbox-overlay');
+  var lbImg = $('lightbox-img');
+  var lbClose = $('lightbox-close');
+
+  // 使用上传页的预览图作为来源
+  if (uploadedImageUrl) {
+    thumbImg.src = uploadedImageUrl;
+    lbImg.src = uploadedImageUrl;
+    thumb.style.display = 'block';
+  }
+
+  thumb.onclick = function() {
+    overlay.classList.add('visible');
+  };
+
+  lbClose.onclick = function() {
+    overlay.classList.remove('visible');
+  };
+
+  overlay.onclick = function(e) {
+    if (e.target === overlay) {
+      overlay.classList.remove('visible');
+    }
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+      overlay.classList.remove('visible');
+    }
+  });
+}
 
 /* ====== RENDER ====== */
 function renderTutorial() {
@@ -484,6 +732,10 @@ function renderTutorial() {
     html += '</div>';
     html += '<span class="area-tag">' + areaLabel + '</span>';
     html += '</div>';
+
+    // flex 布局：左文字 + 右人台 SVG
+    html += '<div class="step-body">';
+    html += '<div class="step-text">';
     html += '<p class="step-desc">' + (s.desc || '') + '</p>';
 
     if (s.tips) {
@@ -501,6 +753,11 @@ function renderTutorial() {
       }
       html += '</div></div>';
     }
+    html += '</div>'; // end .step-text
+
+    // 人台 SVG
+    html += '<div class="step-mannequin">' + buildMannequinSVG(s.area || 'full', si + 1) + '</div>';
+    html += '</div>'; // end .step-body
 
     html += '<div class="step-progress">步骤 ' + (si + 1) + ' / ' + steps.length + '</div>';
     html += '</div>';
@@ -513,6 +770,10 @@ function renderTutorial() {
   html += '</div>';
 
   rp.innerHTML = html;
+
+  // 初始化三大功能
+  initStepTOC();
+  initDesignPreview();
 }
 </script>
 </body>
