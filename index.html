@@ -254,14 +254,15 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 }
 .lightbox-close:hover { background: rgba(255,255,255,0.3); }
 
-/* ====== 人台 SVG 示意图 ====== */
+/* ====== 步骤线描 SVG 图示 ====== */
 .step-body { display: flex; gap: 18px; align-items: flex-start; }
 .step-text { flex: 1; min-width: 0; }
-.step-mannequin { width: 72px; flex-shrink: 0; }
-.step-mannequin svg { width: 100%; height: auto; }
+.step-mannequin { width: 200px; flex-shrink: 0; cursor: pointer; transition: opacity 0.2s; }
+.step-mannequin:hover { opacity: 0.8; }
+.step-mannequin svg { width: 100%; height: auto; border-radius: 8px; background: #faf8f5; border: 1px solid var(--border); }
 @media (max-width: 580px) {
   .step-body { flex-direction: column-reverse; align-items: center; }
-  .step-mannequin { width: 60px; }
+  .step-mannequin { width: 100%; max-width: 240px; }
   .toc-fab { bottom: 16px; left: 16px; padding: 8px 14px; font-size: 13px; }
   .toc-panel { bottom: 64px; left: 16px; width: 240px; max-height: 340px; }
   .design-thumb { top: 62px; right: 12px; width: 44px; height: 44px; }
@@ -351,20 +352,6 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 var ICONS = { pin:"\uD83D\uDCCC", scissors:"\u2702\uFE0F", pencil:"\u270F\uFE0F", ruler:"\uD83D\uDCD0", hand:"\u270B", fold:"\uD83D\uDD04", iron:"\uD83D\uDD25", measure:"\uD83D\uDCCF" };
 var AREA_LABELS = { neck:"\u9886\u53E3", shoulder:"\u80A9\u90E8", chest:"\u80F8\u90E8", waist:"\u8170\u90E8", hip:"\u81C0\u90E8", hem:"\u4E0B\u6446", side:"\u4FA7\u7F1D", back:"\u540E\u80CC", full:"\u6574\u4F53" };
 var DIF_LABELS = ["","入门","初级","中等","中高","高级"];
-
-/* ====== MANNEQUIN SVG 数据 ====== */
-var MANNEQUIN_PATH = 'M80,15 C80,15 93,18 93,36 L130,46 C133,50 128,58 124,72 C120,86 123,94 121,110 C119,126 109,138 108,145 C107,153 109,163 114,178 C120,193 122,204 119,218 L116,235 L44,235 C41,218 40,204 46,178 C51,163 53,153 52,145 C51,138 41,126 39,110 C37,94 40,86 36,72 C32,58 27,50 30,46 L67,36 C67,18 80,15 80,15 Z';
-var AREA_REGIONS = {
-  neck:      { path:'M67,30 C67,30 72,25 80,25 C88,25 93,30 93,30 L93,42 L67,42 Z', color:'#E8856C' },
-  shoulder:  { path:'M30,46 L67,36 L67,50 L30,54 Z M93,36 L130,46 L130,54 L93,50 Z', color:'#D4A574' },
-  chest:     { path:'M36,54 L124,54 L124,90 L36,90 Z', color:'#C9927A' },
-  waist:     { path:'M39,100 L121,100 L121,128 L39,128 Z', color:'#B8856C' },
-  hip:       { path:'M46,155 L114,155 L119,200 L41,200 Z', color:'#D4A574' },
-  hem:       { path:'M44,215 L116,215 L116,235 L44,235 Z', color:'#C9927A' },
-  side:      { path:'M30,46 L40,46 L39,180 L41,235 L44,235 L46,180 L36,72 L30,46 Z M130,46 L120,46 L121,180 L119,235 L116,235 L114,180 L124,72 L130,46 Z', color:'#E8A080' },
-  back:      { path:'M52,60 L108,60 L108,145 L52,145 Z', color:'#D4B8A0' },
-  full:      { path:'M30,46 L67,36 C67,18 80,15 80,15 C80,15 93,18 93,36 L130,46 C133,50 128,58 124,72 C120,86 123,94 121,110 C119,126 109,138 108,145 C107,153 109,163 114,178 C120,193 122,204 119,218 L116,235 L44,235 C41,218 40,204 46,178 C51,163 53,153 52,145 C51,138 41,126 39,110 C37,94 40,86 36,72 C32,58 27,50 30,46 Z', color:'#E8D0C0' }
-};
 
 /* ====== STATE ====== */
 var fileBase64 = null;
@@ -534,22 +521,30 @@ $('btn-back').addEventListener('click', function() {
   showScreen('upload');
 });
 
-/* ====== MANNEQUIN SVG BUILDER ====== */
-function buildMannequinSVG(area, stepNum) {
-  var region = AREA_REGIONS[area] || AREA_REGIONS['full'];
-  var svg = '<svg viewBox="0 0 160 260" xmlns="http://www.w3.org/2000/svg">';
-  // 高亮区域
-  svg += '<path d="' + region.path + '" fill="' + region.color + '" opacity="0.35"/>';
-  // 人台轮廓
-  svg += '<path d="' + MANNEQUIN_PATH + '" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>';
-  // 底座
-  svg += '<line x1="80" y1="235" x2="80" y2="252" stroke="#1a1a1a" stroke-width="1.2"/>';
-  svg += '<ellipse cx="80" cy="255" rx="24" ry="5" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>';
-  // 步骤序号标记
-  svg += '<circle cx="130" cy="24" r="14" fill="' + region.color + '" opacity="0.9"/>';
-  svg += '<text x="130" y="29" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">' + stepNum + '</text>';
-  svg += '</svg>';
-  return svg;
+/* ====== SVG LIGHTBOX ====== */
+function showSvgLightbox(el) {
+  var svgContent = el.innerHTML;
+  var overlay = $('lightbox-overlay');
+  var lbImg = $('lightbox-img');
+  lbImg.style.display = 'none';
+  var existing = overlay.querySelector('.lightbox-svg');
+  if (existing) existing.remove();
+  var div = document.createElement('div');
+  div.className = 'lightbox-svg';
+  div.innerHTML = svgContent;
+  div.style.cssText = 'max-width:80vw;max-height:80vh;background:#fff;border-radius:12px;padding:20px;box-shadow:0 8px 48px rgba(0,0,0,0.4);';
+  var svgEl = div.querySelector('svg');
+  if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = 'auto'; svgEl.style.maxHeight = '75vh'; }
+  overlay.appendChild(div);
+  overlay.classList.add('visible');
+}
+
+function closeLightbox() {
+  var overlay = $('lightbox-overlay');
+  overlay.classList.remove('visible');
+  var svgBox = overlay.querySelector('.lightbox-svg');
+  if (svgBox) svgBox.remove();
+  $('lightbox-img').style.display = '';
 }
 
 /* ====== TOC INIT ====== */
@@ -641,18 +636,18 @@ function initDesignPreview() {
   };
 
   lbClose.onclick = function() {
-    overlay.classList.remove('visible');
+    closeLightbox();
   };
 
   overlay.onclick = function(e) {
     if (e.target === overlay) {
-      overlay.classList.remove('visible');
+      closeLightbox();
     }
   };
 
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && overlay.classList.contains('visible')) {
-      overlay.classList.remove('visible');
+      closeLightbox();
     }
   });
 }
@@ -755,8 +750,10 @@ function renderTutorial() {
     }
     html += '</div>'; // end .step-text
 
-    // 人台 SVG
-    html += '<div class="step-mannequin">' + buildMannequinSVG(s.area || 'full', si + 1) + '</div>';
+    // AI 生成的线描 SVG 图示
+    if (s.svg) {
+      html += '<div class="step-mannequin" onclick="showSvgLightbox(this)">' + s.svg + '</div>';
+    }
     html += '</div>'; // end .step-body
 
     html += '<div class="step-progress">步骤 ' + (si + 1) + ' / ' + steps.length + '</div>';

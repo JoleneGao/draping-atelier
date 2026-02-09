@@ -206,6 +206,7 @@ function validateAndFix(data) {
       icon: s.icon || 'pin',
       area: s.area || 'full',
       tips: s.tips || '',
+      svg: s.svg || '',
       troubles: Array.isArray(s.troubles) ? s.troubles.map(t => ({
         q: t.q || '', a: t.a || ''
       })) : []
@@ -236,9 +237,23 @@ export default async function handler(req, res) {
     const PROMPT = `你是一位拥有20年经验的立裁（draping）大师和时装设计教育家。请分析这张立裁/服装设计图片，为零基础初学者提供一份完整的、手把手的立裁操作教程。
 
 请用中文回答。严格只返回JSON，不要有任何其他文字、markdown标记或代码块：
-{"designName":"简洁的设计名称","designAnalysis":"2-3句话描述这件设计的核心特征和整体风格","difficulty":3,"difficultyReason":"难度评估原因","estimatedTime":"预计完成时间","materials":[{"item":"材料名","spec":"规格克重质地等","qty":"用量"}],"tools":[{"name":"工具名","purpose":"用途"}],"steps":[{"title":"步骤标题","desc":"详细操作说明，用初学者能理解的语言描述手怎么放、布怎么摆、针怎么插，至少3-4句话","technique":"核心技法","icon":"pin","area":"chest","tips":"操作贴士","troubles":[{"q":"可能的问题","a":"解决方法"}]}]}
+{"designName":"简洁的设计名称","designAnalysis":"2-3句话描述这件设计的核心特征和整体风格","difficulty":3,"difficultyReason":"难度评估原因","estimatedTime":"预计完成时间","materials":[{"item":"材料名","spec":"规格克重质地等","qty":"用量"}],"tools":[{"name":"工具名","purpose":"用途"}],"steps":[{"title":"步骤标题","desc":"详细操作说明，用初学者能理解的语言描述手怎么放、布怎么摆、针怎么插，至少3-4句话","technique":"核心技法","icon":"pin","area":"chest","tips":"操作贴士","troubles":[{"q":"可能的问题","a":"解决方法"}],"svg":"<svg viewBox='0 0 200 260' xmlns='http://www.w3.org/2000/svg'>此步骤的极简线描SVG代码</svg>"}]}
 
-要求：1.步骤详细，每步只做一个核心动作 2.通俗易懂，专业术语附解释 3.提供8-15个步骤 4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full 5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure 6.所有字符串值内不要包含换行，保持在一行内`;
+要求：
+1.步骤详细，每步只做一个核心动作
+2.通俗易懂，专业术语附解释
+3.提供8-15个步骤
+4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full
+5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure
+6.所有字符串值内不要包含换行，保持在一行内
+7.【重要】每个步骤的svg字段必须包含一个完整的极简线描SVG插图，用于直观展示该步骤的操作。SVG要求：
+  - viewBox='0 0 200 260'，xmlns='http://www.w3.org/2000/svg'
+  - 画出人台正面轮廓（简笔线条即可），然后在人台上画出该步骤的具体操作
+  - 用线条展示：布料的位置和走向、珠针插入位置（用实心小圆点circle r=3）、手的动作方向（用带箭头的线）、折叠和省道（用虚线stroke-dasharray='4 3'）
+  - 线描风格：主线条stroke='#1a1a1a' stroke-width='1.5' fill='none'，关键操作部位用stroke='#B8856C'高亮
+  - 只用path/line/circle/ellipse/rect/text/g/polygon标签和基本属性（stroke/fill/stroke-width/stroke-dasharray/font-size/text-anchor/transform/d/cx/cy/r/x1/y1/x2/y2/x/y/points/rx/ry/width/height）
+  - 不要用style标签、不要用class、不要用marker-end（箭头用polygon三角形实现）
+  - SVG代码必须写在一行内，不要换行`;
 
     // 设置 120 秒超时
     const controller = new AbortController();
@@ -256,7 +271,7 @@ export default async function handler(req, res) {
         signal: controller.signal,
         body: JSON.stringify({
           model,
-          max_tokens: 4096,
+          max_tokens: 16000,
           messages: [
             {
               role: 'user',
