@@ -353,6 +353,134 @@ var ICONS = { pin:"\uD83D\uDCCC", scissors:"\u2702\uFE0F", pencil:"\u270F\uFE0F"
 var AREA_LABELS = { neck:"\u9886\u53E3", shoulder:"\u80A9\u90E8", chest:"\u80F8\u90E8", waist:"\u8170\u90E8", hip:"\u81C0\u90E8", hem:"\u4E0B\u6446", side:"\u4FA7\u7F1D", back:"\u540E\u80CC", full:"\u6574\u4F53" };
 var DIF_LABELS = ["","入门","初级","中等","中高","高级"];
 
+/* ====== 预设线描 SVG 图库 ====== */
+// 人台基础轮廓
+var FORM_BASE = '<path d="M100,18 C100,18 113,21 113,39 L150,49 C153,53 148,61 144,75 C140,89 143,97 141,113 C139,129 129,141 128,148 C127,156 129,166 134,181 C140,196 142,207 139,221 L136,238 L64,238 C61,221 60,207 66,181 C71,166 73,156 72,148 C71,141 61,129 59,113 C57,97 60,89 56,75 C52,61 47,53 50,49 L87,39 C87,21 100,18 100,18 Z" fill="none" stroke="#1a1a1a" stroke-width="1.2"/><line x1="100" y1="238" x2="100" y2="258" stroke="#1a1a1a" stroke-width="1.2"/><ellipse cx="100" cy="261" rx="26" ry="5" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>';
+
+// 各区域高亮路径
+var AREA_HL = {
+  neck:     '<path d="M87,33 C87,33 92,28 100,28 C108,28 113,33 113,33 L113,45 L87,45 Z" fill="#B8856C" opacity="0.2"/>',
+  shoulder: '<path d="M50,49 L87,39 L87,53 L50,57 Z" fill="#B8856C" opacity="0.2"/><path d="M113,39 L150,49 L150,57 L113,53 Z" fill="#B8856C" opacity="0.2"/>',
+  chest:    '<path d="M56,57 L144,57 L144,93 L56,93 Z" fill="#B8856C" opacity="0.2"/>',
+  waist:    '<path d="M59,103 L141,103 L141,131 L59,131 Z" fill="#B8856C" opacity="0.2"/>',
+  hip:      '<path d="M66,158 L134,158 L139,203 L61,203 Z" fill="#B8856C" opacity="0.2"/>',
+  hem:      '<path d="M64,218 L136,218 L136,238 L64,238 Z" fill="#B8856C" opacity="0.2"/>',
+  side:     '<path d="M50,49 L60,49 L59,183 L61,238 L64,238 L66,183 L56,75 L50,49 Z" fill="#B8856C" opacity="0.2"/><path d="M150,49 L140,49 L141,183 L139,238 L136,238 L134,183 L144,75 L150,49 Z" fill="#B8856C" opacity="0.2"/>',
+  back:     '<path d="M72,63 L128,63 L128,148 L72,148 Z" fill="#B8856C" opacity="0.15"/>',
+  full:     '<path d="M50,49 L87,39 C87,21 100,18 100,18 C100,18 113,21 113,39 L150,49 C153,53 148,61 144,75 C140,89 143,97 141,113 C139,129 129,141 128,148 C127,156 129,166 134,181 C140,196 142,207 139,221 L136,238 L64,238 C61,221 60,207 66,181 C71,166 73,156 72,148 C71,141 61,129 59,113 C57,97 60,89 56,75 C52,61 47,53 50,49 Z" fill="#B8856C" opacity="0.1"/>'
+};
+
+// 操作类型图示叠加层（icon对应的动作线描）
+var ACTION_SVG = {
+  pin: function(area) {
+    // 珠针固定：针+手
+    var pts = {neck:[100,38],shoulder:[78,48],chest:[100,75],waist:[100,117],hip:[100,180],hem:[100,228],side:[58,120],back:[100,105],full:[100,100]};
+    var p = pts[area] || pts.full;
+    return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#B8856C"/>'
+      + '<line x1="'+p[0]+'" y1="'+(p[1]-3)+'" x2="'+(p[0]+2)+'" y2="'+(p[1]-18)+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<circle cx="'+(p[0]+2)+'" cy="'+(p[1]-20)+'" r="4" fill="none" stroke="#B8856C" stroke-width="1.2"/>'
+      + '<circle cx="'+(p[0]+18)+'" cy="'+p[1]+'" r="3" fill="#B8856C"/>'
+      + '<line x1="'+(p[0]+18)+'" y1="'+(p[1]-3)+'" x2="'+(p[0]+20)+'" y2="'+(p[1]-18)+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<circle cx="'+(p[0]+20)+'" cy="'+(p[1]-20)+'" r="4" fill="none" stroke="#B8856C" stroke-width="1.2"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u73E0\u9488\u56FA\u5B9A</text>';
+  },
+  scissors: function(area) {
+    // 剪裁：剪刀形状
+    var pts = {neck:[100,40],shoulder:[85,50],chest:[100,80],waist:[100,120],hip:[100,185],hem:[100,230],side:[55,130],back:[100,110],full:[100,100]};
+    var p = pts[area] || pts.full;
+    return '<line x1="'+(p[0]-12)+'" y1="'+(p[1]-8)+'" x2="'+(p[0]+12)+'" y2="'+(p[1]+8)+'" stroke="#B8856C" stroke-width="1.8"/>'
+      + '<line x1="'+(p[0]-12)+'" y1="'+(p[1]+8)+'" x2="'+(p[0]+12)+'" y2="'+(p[1]-8)+'" stroke="#B8856C" stroke-width="1.8"/>'
+      + '<circle cx="'+(p[0]-14)+'" cy="'+(p[1]-10)+'" r="5" fill="none" stroke="#B8856C" stroke-width="1.2"/>'
+      + '<circle cx="'+(p[0]-14)+'" cy="'+(p[1]+10)+'" r="5" fill="none" stroke="#B8856C" stroke-width="1.2"/>'
+      + '<line x1="'+(p[0]+14)+'" y1="'+p[1]+'" x2="'+(p[0]+30)+'" y2="'+p[1]+'" stroke="#B8856C" stroke-width="1" stroke-dasharray="4 3"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u526A\u88C1</text>';
+  },
+  pencil: function(area) {
+    // 标记画线
+    var pts = {neck:[90,38],shoulder:[70,48],chest:[80,65],waist:[75,108],hip:[75,170],hem:[75,222],side:[55,100],back:[85,95],full:[80,80]};
+    var p = pts[area] || pts.full;
+    return '<line x1="'+p[0]+'" y1="'+p[1]+'" x2="'+(p[0]+40)+'" y2="'+(p[1]+35)+'" stroke="#B8856C" stroke-width="1.5" stroke-dasharray="6 3"/>'
+      + '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#B8856C"/>'
+      + '<circle cx="'+(p[0]+20)+'" cy="'+(p[1]+17)+'" r="2" fill="#B8856C"/>'
+      + '<circle cx="'+(p[0]+40)+'" cy="'+(p[1]+35)+'" r="2" fill="#B8856C"/>'
+      + '<path d="M'+(p[0]-18)+','+(p[1]-5)+' L'+(p[0]-5)+','+(p[1]-2)+' L'+(p[0]-7)+','+(p[1]+2)+' Z" fill="#B8856C" opacity="0.7"/>'
+      + '<line x1="'+(p[0]-18)+'" y1="'+(p[1]-5)+'" x2="'+(p[0]-30)+'" y2="'+(p[1]-12)+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u6807\u8BB0\u753B\u7EBF</text>';
+  },
+  ruler: function(area) {
+    // 测量
+    var pts = {neck:[88,30],shoulder:[65,44],chest:[70,60],waist:[68,105],hip:[68,165],hem:[68,218],side:[48,95],back:[78,85],full:[72,70]};
+    var p = pts[area] || pts.full;
+    var ey = p[1] + 50;
+    return '<line x1="'+p[0]+'" y1="'+p[1]+'" x2="'+p[0]+'" y2="'+ey+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<line x1="'+(p[0]-6)+'" y1="'+p[1]+'" x2="'+(p[0]+6)+'" y2="'+p[1]+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<line x1="'+(p[0]-6)+'" y1="'+ey+'" x2="'+(p[0]+6)+'" y2="'+ey+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<line x1="'+(p[0]+10)+'" y1="'+p[1]+'" x2="'+(p[0]+30)+'" y2="'+p[1]+'" stroke="#B8856C" stroke-width="0.8" stroke-dasharray="3 2"/>'
+      + '<line x1="'+(p[0]+10)+'" y1="'+ey+'" x2="'+(p[0]+30)+'" y2="'+ey+'" stroke="#B8856C" stroke-width="0.8" stroke-dasharray="3 2"/>'
+      + '<text x="'+(p[0]+4)+'" y="'+(p[1]+28)+'" font-size="8" fill="#B8856C" transform="rotate(90 '+(p[0]+4)+' '+(p[1]+28)+')">\u2194</text>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u6D4B\u91CF</text>';
+  },
+  hand: function(area) {
+    // 手工整理/抚平
+    var pts = {neck:[95,36],shoulder:[82,48],chest:[95,72],waist:[95,115],hip:[95,178],hem:[95,225],side:[58,115],back:[95,103],full:[95,95]};
+    var p = pts[area] || pts.full;
+    return '<path d="M'+(p[0]+5)+','+(p[1]+5)+' C'+(p[0]+15)+','+(p[1]-8)+' '+(p[0]+25)+','+(p[1]-15)+' '+(p[0]+28)+','+(p[1]-22)+'" fill="none" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<path d="M'+(p[0]+28)+','+(p[1]-22)+' L'+(p[0]+32)+','+(p[1]-28)+' L'+(p[0]+26)+','+(p[1]-30)+' L'+(p[0]+30)+','+(p[1]-36)+' L'+(p[0]+24)+','+(p[1]-34)+' L'+(p[0]+22)+','+(p[1]-26)+'" fill="none" stroke="#B8856C" stroke-width="1.2"/>'
+      + '<polygon points="'+(p[0]-5)+','+(p[1]+10)+' '+(p[0]+5)+','+(p[1]+5)+' '+(p[0]+15)+','+(p[1]+12)+'" fill="#B8856C" opacity="0.15"/>'
+      + '<path d="M'+(p[0]-10)+','+(p[1]+15)+' Q'+p[0]+','+(p[1]+5)+' '+(p[0]+20)+','+(p[1]+18)+'" fill="none" stroke="#B8856C" stroke-width="1" stroke-dasharray="4 3"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u624B\u5DE5\u6574\u7406</text>';
+  },
+  fold: function(area) {
+    // 折叠/省道
+    var pts = {neck:[100,38],shoulder:[85,50],chest:[100,75],waist:[100,117],hip:[100,180],hem:[100,228],side:[60,120],back:[100,105],full:[100,100]};
+    var p = pts[area] || pts.full;
+    return '<line x1="'+(p[0]-15)+'" y1="'+(p[1]-10)+'" x2="'+(p[0]-15)+'" y2="'+(p[1]+30)+'" stroke="#B8856C" stroke-width="1.5" stroke-dasharray="5 3"/>'
+      + '<line x1="'+(p[0]+15)+'" y1="'+(p[1]-10)+'" x2="'+(p[0]+15)+'" y2="'+(p[1]+30)+'" stroke="#B8856C" stroke-width="1.5" stroke-dasharray="5 3"/>'
+      + '<path d="M'+(p[0]-15)+','+(p[1]+5)+' Q'+p[0]+','+(p[1]-8)+' '+(p[0]+15)+','+(p[1]+5)+'" fill="none" stroke="#B8856C" stroke-width="1.3"/>'
+      + '<polygon points="'+p[0]+','+(p[1]-10)+' '+(p[0]-4)+','+(p[1]-3)+' '+(p[0]+4)+','+(p[1]-3)+'" fill="#B8856C" opacity="0.6"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u6298\u53E0/\u7701\u9053</text>';
+  },
+  iron: function(area) {
+    // 熨烫
+    var pts = {neck:[95,36],shoulder:[82,48],chest:[95,72],waist:[95,115],hip:[95,178],hem:[95,225],side:[58,115],back:[95,103],full:[95,95]};
+    var p = pts[area] || pts.full;
+    return '<rect x="'+(p[0]-8)+'" y="'+(p[1]-15)+'" width="30" height="18" rx="3" fill="none" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<line x1="'+(p[0]+7)+'" y1="'+(p[1]-15)+'" x2="'+(p[0]+7)+'" y2="'+(p[1]-25)+'" stroke="#B8856C" stroke-width="1.2"/>'
+      + '<path d="M'+(p[0]-3)+','+(p[1]-25)+' L'+(p[0]+17)+','+(p[1]-25)+'" fill="none" stroke="#B8856C" stroke-width="1.2"/>'
+      + '<path d="M'+(p[0]-5)+','+(p[1]+6)+' Q'+(p[0]+5)+','+(p[1]+12)+' '+(p[0]+18)+','+(p[1]+6)+'" fill="none" stroke="#B8856C" stroke-width="0.8" stroke-dasharray="3 2"/>'
+      + '<path d="M'+(p[0]-5)+','+(p[1]+12)+' Q'+(p[0]+5)+','+(p[1]+18)+' '+(p[0]+18)+','+(p[1]+12)+'" fill="none" stroke="#B8856C" stroke-width="0.8" stroke-dasharray="3 2"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u71EB\u70EB</text>';
+  },
+  measure: function(area) {
+    // 量取尺寸（软尺）
+    var pts = {neck:[88,32],shoulder:[68,46],chest:[72,62],waist:[70,107],hip:[70,168],hem:[70,220],side:[50,100],back:[80,88],full:[75,75]};
+    var p = pts[area] || pts.full;
+    return '<path d="M'+p[0]+','+p[1]+' Q'+(p[0]+35)+','+(p[1]+15)+' '+(p[0]+20)+','+(p[1]+40)+'" fill="none" stroke="#B8856C" stroke-width="1.8"/>'
+      + '<line x1="'+(p[0]+5)+'" y1="'+(p[1]+7)+'" x2="'+(p[0]+10)+'" y2="'+(p[1]+4)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<line x1="'+(p[0]+12)+'" y1="'+(p[1]+12)+'" x2="'+(p[0]+17)+'" y2="'+(p[1]+8)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<line x1="'+(p[0]+18)+'" y1="'+(p[1]+19)+'" x2="'+(p[0]+23)+'" y2="'+(p[1]+15)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<line x1="'+(p[0]+22)+'" y1="'+(p[1]+27)+'" x2="'+(p[0]+27)+'" y2="'+(p[1]+23)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u91CF\u53D6\u5C3A\u5BF8</text>';
+  }
+};
+
+// 生成完整步骤 SVG
+function buildStepSVG(icon, area, stepNum) {
+  var areaKey = area || 'full';
+  var iconKey = icon || 'pin';
+  if (!AREA_HL[areaKey]) areaKey = 'full';
+  if (!ACTION_SVG[iconKey]) iconKey = 'pin';
+  var svg = '<svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg">';
+  svg += AREA_HL[areaKey];
+  svg += FORM_BASE;
+  svg += ACTION_SVG[iconKey](areaKey);
+  // 步骤序号角标
+  svg += '<circle cx="18" cy="18" r="13" fill="#B8856C" opacity="0.9"/>';
+  svg += '<text x="18" y="23" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">' + stepNum + '</text>';
+  svg += '</svg>';
+  return svg;
+}
+
 /* ====== STATE ====== */
 var fileBase64 = null;
 var fileMediaType = null;
@@ -750,10 +878,8 @@ function renderTutorial() {
     }
     html += '</div>'; // end .step-text
 
-    // AI 生成的线描 SVG 图示
-    if (s.svg) {
-      html += '<div class="step-mannequin" onclick="showSvgLightbox(this)">' + s.svg + '</div>';
-    }
+    // 预设线描 SVG 图示（根据 icon + area 匹配）
+    html += '<div class="step-mannequin" onclick="showSvgLightbox(this)">' + buildStepSVG(s.icon, s.area, si + 1) + '</div>';
     html += '</div>'; // end .step-body
 
     html += '<div class="step-progress">步骤 ' + (si + 1) + ' / ' + steps.length + '</div>';
