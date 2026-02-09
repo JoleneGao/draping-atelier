@@ -259,14 +259,22 @@ export default async function handler(req, res) {
       ],
     });
 
-    // 带重试的 fetch（最多 2 次）
+    const OFFICIAL_API = 'https://api.anthropic.com';
+    // 尝试顺序：先用配置的地址，失败则 fallback 到官方 API
+    const endpoints = [apiBase];
+    if (apiBase !== OFFICIAL_API) endpoints.push(OFFICIAL_API);
+
     let response;
-    for (let attempt = 1; attempt <= 2; attempt++) {
+    let lastError = null;
+    for (let ei = 0; ei < endpoints.length; ei++) {
+      const url = endpoints[ei] + '/v1/messages';
+      console.log(`Trying endpoint ${ei + 1}/${endpoints.length}: ${endpoints[ei]}`);
+
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 150000);
 
       try {
-        response = await fetch(`${apiBase}/v1/messages`, {
+        response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -277,18 +285,24 @@ export default async function handler(req, res) {
           body: requestBody,
         });
         clearTimeout(timeout);
-        break; // 成功则跳出
+        console.log(`Endpoint ${endpoints[ei]} responded with status ${response.status}`);
+        break; // 成功连接
       } catch (fetchErr) {
         clearTimeout(timeout);
-        console.error(`Fetch attempt ${attempt} failed:`, fetchErr.message);
+        lastError = fetchErr;
+        console.error(`Endpoint ${endpoints[ei]} failed:`, fetchErr.message);
         if (fetchErr.name === 'AbortError') {
-          return res.status(504).json({ error: 'AI 服务响应超时（150秒），请稍后重试或更换较小的图片' });
+          // 超时了，如果还有下一个 endpoint 则继续
+          if (ei === endpoints.length - 1) {
+            return res.status(504).json({ error: 'AI 服务响应超时，请稍后重试或更换较小的图片' });
+          }
+          continue;
         }
-        if (attempt === 2) {
-          return res.status(502).json({ error: '无法连接到 AI 服务（' + fetchErr.message + '），请稍后重试' });
+        if (ei === endpoints.length - 1) {
+          return res.status(502).json({ error: '无法连接到 AI 服务，请稍后重试' });
         }
-        // 第一次失败，等 2 秒后重试
-        await new Promise(r => setTimeout(r, 2000));
+        // 还有 fallback，等 1 秒再试
+        await new Promise(r => setTimeout(r, 1000));
       }
     }
 
