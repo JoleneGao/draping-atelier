@@ -16,8 +16,10 @@ function extractJSON(rawText) {
 
   let text = rawText.trim();
 
-  // 1. 去掉 markdown 代码块包裹
+  // 1. 去掉 markdown 代码块包裹（支持多种格式）
   text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
+  // 去掉可能的 BOM
+  text = text.replace(/^\uFEFF/, '');
   text = text.trim();
 
   // 2. 直接尝试解析
@@ -31,12 +33,14 @@ function extractJSON(rawText) {
   const firstBrace = text.indexOf('{');
   const lastBrace = text.lastIndexOf('}');
   if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    // 最后尝试：也许整个文本被包在其他字符中
+    console.error('No JSON braces found. Text preview:', text.substring(0, 500));
     throw new Error('AI 返回内容中未找到 JSON 对象');
   }
 
   let jsonStr = text.substring(firstBrace, lastBrace + 1);
 
-  // 4. 清理常见问题
+  // 4. 基础清理
   // 去除控制字符（保留 \n \r \t）
   jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
   // 去除尾逗号
@@ -48,21 +52,30 @@ function extractJSON(rawText) {
     console.log('Cleaned parse failed:', e.message);
   }
 
-  // 5. 处理字符串值内的未转义换行符（JSON 规范不允许，但 AI 常生成）
-  //    在双引号字符串内部，将真实换行替换为 \\n
+  // 5. 深度修复：逐字符遍历，修复字符串内的所有非法字符
   let fixed = '';
   let inString = false;
   let escaped = false;
   for (let i = 0; i < jsonStr.length; i++) {
     const ch = jsonStr[i];
     if (escaped) {
-      fixed += ch;
+      // 验证转义序列是否合法
+      if ('"\\\/bfnrtu'.indexOf(ch) >= 0) {
+        fixed += ch;
+      } else {
+        // 非法转义，去掉反斜杠保留字符
+        fixed += ch;
+      }
       escaped = false;
       continue;
     }
     if (ch === '\\') {
-      fixed += ch;
-      escaped = true;
+      if (inString) {
+        fixed += ch;
+        escaped = true;
+      } else {
+        // 字符串外的反斜杠，直接跳过
+      }
       continue;
     }
     if (ch === '"') {
@@ -70,9 +83,16 @@ function extractJSON(rawText) {
       fixed += ch;
       continue;
     }
-    if (inString && (ch === '\n' || ch === '\r')) {
-      fixed += '\\n';
-      continue;
+    if (inString) {
+      // 字符串内：换行 → \\n，制表符 → \\t
+      if (ch === '\n' || ch === '\r') {
+        fixed += '\\n';
+        continue;
+      }
+      if (ch === '\t') {
+        fixed += '\\t';
+        continue;
+      }
     }
     fixed += ch;
   }
@@ -81,7 +101,6 @@ function extractJSON(rawText) {
     return JSON.parse(fixed);
   } catch (e) {
     console.log('Newline-fixed parse failed:', e.message);
-    // 打印出错位置附近的内容帮助调试
     const match = e.message.match(/position\s+(\d+)/i);
     if (match) {
       const pos = parseInt(match[1]);
@@ -89,6 +108,75 @@ function extractJSON(rawText) {
     }
   }
 
+  // 6. 终极修复：中文引号替换 + 再次尝试
+  let ultimate = fixed;
+  ultimate = ultimate.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"');  // 中文双引号 → "
+  ultimate = ultimate.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'"); // 中文单引号 → '
+  // 修复可能的半角问题
+  ultimate = ultimate.replace(/，/g, ',');  // 中文逗号 → 英文逗号
+  ultimate = ultimate.replace(/：/g, ':');  // 中文冒号 → 英文冒号
+  // 再次去除尾逗号
+  ultimate = ultimate.replace(/,\s*([}\]])/g, '$1');
+
+  try {
+    return JSON.parse(ultimate);
+  } catch (e) {
+    console.log('Ultimate fix parse failed:', e.message);
+    const match = e.message.match(/position\s+(\d+)/i);
+    if (match) {
+      const pos = parseInt(match[1]);
+      console.log('Ultimate error near:', JSON.stringify(ultimate.substring(Math.max(0, pos - 80), pos + 80)));
+    }
+  }
+
+  // 7. 最后手段：用正则提取关键字段手动构建
+  try {
+    console.log('Attempting regex field extraction...');
+    const getName = (str, key) => {
+      const re = new RegExp('"' + key + '"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"', 's');
+      const m = str.match(re);
+      return m ? m[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : '';
+    };
+    const getNum = (str, key) => {
+      const re = new RegExp('"' + key + '"\\s*:\\s*(\\d+)');
+      const m = str.match(re);
+      return m ? parseInt(m[1]) : 3;
+    };
+
+    // 提取 steps 数组 - 找到所有 title+desc 对
+    const stepRegex = /\{"title"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"desc"\s*:\s*"((?:[^"\\]|\\.)*)"/gs;
+    const stepsArr = [];
+    let stepMatch;
+    while ((stepMatch = stepRegex.exec(jsonStr)) !== null) {
+      stepsArr.push({
+        title: stepMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"'),
+        desc: stepMatch[2].replace(/\\n/g, ' ').replace(/\\"/g, '"'),
+        technique: '',
+        icon: 'pin',
+        area: 'full',
+        tips: '',
+        troubles: []
+      });
+    }
+
+    if (stepsArr.length > 0) {
+      console.log('Regex extraction found', stepsArr.length, 'steps');
+      return {
+        designName: getName(jsonStr, 'designName') || '立裁教程',
+        designAnalysis: getName(jsonStr, 'designAnalysis') || '',
+        difficulty: getNum(jsonStr, 'difficulty'),
+        difficultyReason: getName(jsonStr, 'difficultyReason') || '',
+        estimatedTime: getName(jsonStr, 'estimatedTime') || '未知',
+        materials: [],
+        tools: [],
+        steps: stepsArr
+      };
+    }
+  } catch (regexErr) {
+    console.log('Regex extraction failed:', regexErr.message);
+  }
+
+  console.error('All parse attempts failed. JSON preview:', jsonStr.substring(0, 800));
   throw new Error('多次尝试后仍无法解析 AI 返回的 JSON');
 }
 
@@ -169,13 +257,19 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model,
           max_tokens: 4096,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
-              { type: 'text', text: PROMPT },
-            ],
-          }],
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
+                { type: 'text', text: PROMPT },
+              ],
+            },
+            {
+              role: 'assistant',
+              content: '{"designName":"',
+            },
+          ],
         }),
       });
     } catch (fetchErr) {
@@ -215,11 +309,12 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'AI 服务返回了无效的响应格式' });
     }
 
-    // 提取文本内容
-    const aiText = (apiData.content || [])
+    // 提取文本内容（加回 prefill 前缀以还原完整 JSON）
+    const rawAiText = (apiData.content || [])
       .filter(b => b.type === 'text')
       .map(b => b.text)
       .join('');
+    const aiText = '{"designName":"' + rawAiText;
 
     if (!aiText.trim()) {
       console.error('Claude returned empty text. Full response:', JSON.stringify(apiData).substring(0, 500));
