@@ -255,45 +255,56 @@ export default async function handler(req, res) {
   - 不要用style标签、不要用class、不要用marker-end（箭头用polygon三角形实现）
   - SVG代码必须写在一行内，不要换行`;
 
-    // 设置 120 秒超时
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120000);
-
-    let response;
-    try {
-      response = await fetch(`${apiBase}/v1/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model,
-          max_tokens: 16000,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
-                { type: 'text', text: PROMPT },
-              ],
-            },
-            {
-              role: 'assistant',
-              content: '{"designName":"',
-            },
+    // 构建请求体
+    const requestBody = JSON.stringify({
+      model,
+      max_tokens: 8192,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
+            { type: 'text', text: PROMPT },
           ],
-        }),
-      });
-    } catch (fetchErr) {
-      if (fetchErr.name === 'AbortError') {
-        return res.status(504).json({ error: 'AI 服务响应超时（120秒），请稍后重试或更换较小的图片' });
+        },
+        {
+          role: 'assistant',
+          content: '{"designName":"',
+        },
+      ],
+    });
+
+    // 带重试的 fetch（最多 2 次）
+    let response;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 150000);
+
+      try {
+        response = await fetch(`${apiBase}/v1/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          signal: controller.signal,
+          body: requestBody,
+        });
+        clearTimeout(timeout);
+        break; // 成功则跳出
+      } catch (fetchErr) {
+        clearTimeout(timeout);
+        console.error(`Fetch attempt ${attempt} failed:`, fetchErr.message);
+        if (fetchErr.name === 'AbortError') {
+          return res.status(504).json({ error: 'AI 服务响应超时（150秒），请稍后重试或更换较小的图片' });
+        }
+        if (attempt === 2) {
+          return res.status(502).json({ error: '无法连接到 AI 服务（' + fetchErr.message + '），请稍后重试' });
+        }
+        // 第一次失败，等 2 秒后重试
+        await new Promise(r => setTimeout(r, 2000));
       }
-      throw fetchErr;
-    } finally {
-      clearTimeout(timeout);
     }
 
     const responseText = await response.text();
