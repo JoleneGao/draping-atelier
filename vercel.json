@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "",
+  "outputDirectory": ".",
   "functions": {
     "api/analyze.js": {
       "maxDuration": 300

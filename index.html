@@ -6,9 +6,6 @@
 <title>UNCUT — AI Draping Guide</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-/* ══════════════════════════════════════════════════════
-   DESIGN SYSTEM
-   ══════════════════════════════════════════════════════ */
 :root {
   --bg: #FAF8F5;
   --card: #ffffff;
@@ -22,7 +19,6 @@
   --text-light: #999999;
   --border: #E8E3DD;
   --shadow: 0 2px 16px rgba(0,0,0,0.05);
-  --shadow-active: 0 4px 24px rgba(184,133,108,0.15);
   --font-display: 'Cormorant Garamond', 'Georgia', serif;
   --font-body: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --radius: 14px;
@@ -32,22 +28,17 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #bbb; }
 
-/* ══════════════════════════════════════════════════════
-   ANIMATIONS
-   ══════════════════════════════════════════════════════ */
 @keyframes formDraw { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dotPulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
 
-/* ══════════════════════════════════════════════════════
-   SCREEN: UPLOAD
-   ══════════════════════════════════════════════════════ */
+/* SCREENS */
 .screen { display: none; }
 .screen.active { display: block; }
 
+/* UPLOAD */
 .upload-screen {
   min-height: 100vh; display: flex; flex-direction: column;
   align-items: center; justify-content: center; padding: 40px;
@@ -76,12 +67,9 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 .btn-secondary { border: 1px solid var(--border); background: transparent; color: var(--text-mid); }
 .btn-primary { border: none; background: var(--accent); color: #fff; font-weight: 600; padding: 12px 36px; }
 .btn-primary:disabled { background: var(--text-light); cursor: wait; }
-
 .footer-note { margin-top: 60px; font-size: 12px; color: var(--text-light); animation: fadeUp 0.6s ease 0.3s both; }
 
-/* ══════════════════════════════════════════════════════
-   SCREEN: LOADING
-   ══════════════════════════════════════════════════════ */
+/* LOADING */
 .loading-screen {
   min-height: 100vh; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
@@ -94,9 +82,7 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 .loading-screen .msg span:nth-child(3) { animation: dotPulse 1.2s infinite 0.4s; }
 .loading-screen .submsg { font-size: 13px; color: var(--text-light); margin-top: 10px; }
 
-/* ══════════════════════════════════════════════════════
-   SCREEN: TUTORIAL
-   ══════════════════════════════════════════════════════ */
+/* TUTORIAL */
 .topbar {
   position: sticky; top: 0; z-index: 50;
   background: rgba(250,248,245,0.92); backdrop-filter: blur(12px);
@@ -109,48 +95,12 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
   padding: 6px 14px; cursor: pointer; font-size: 13px; color: var(--text-mid); font-family: var(--font-body);
 }
 .difficulty { display: flex; gap: 5px; align-items: center; }
-.difficulty .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+.difficulty .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
 .difficulty .dot.filled { background: var(--accent); }
 .difficulty .label { margin-left: 6px; font-size: 13px; color: var(--text-light); }
 
-.dual-panel { display: flex; max-width: 1440px; margin: 0 auto; }
-
-/* LEFT PANEL */
-.left-panel {
-  width: 380px; flex-shrink: 0; position: sticky; top: 56px;
-  height: calc(100vh - 56px); overflow-y: auto;
-  padding: 24px 20px 24px 28px; border-right: 1px solid var(--border);
-}
-.annotated-image { position: relative; border-radius: 12px; overflow: hidden; }
-.annotated-image img { width: 100%; display: block; border-radius: 12px; }
-.annotated-image .overlay { position: absolute; inset: 0; }
-.anno-dot {
-  position: absolute; transform: translate(-50%,-50%); transition: all 0.3s ease; z-index: 5;
-  width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.85); color: var(--text); font-size: 10px; font-weight: 700;
-  border: 1.5px solid var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.15); cursor: default;
-}
-.anno-dot.active {
-  width: 30px; height: 30px; font-size: 13px; z-index: 20;
-  background: var(--accent); color: #fff; border: 2px solid #fff;
-  box-shadow: 0 2px 12px rgba(184,133,108,0.4);
-}
-.form-card {
-  margin-top: 20px; background: var(--card); border-radius: 12px;
-  padding: 16px 12px; box-shadow: var(--shadow); text-align: center;
-}
-.form-card .lbl { font-size: 12px; color: var(--text-light); margin-bottom: 8px; }
-.form-card svg { width: 100%; max-width: 180px; }
-.step-nav { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-.step-nav .nav-dot {
-  width: 28px; height: 28px; border-radius: 50%; font-size: 11px; font-weight: 600;
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  background: var(--accent-soft); color: var(--accent); transition: all 0.2s; border: none;
-}
-.step-nav .nav-dot.active { background: var(--accent); color: #fff; }
-
-/* RIGHT PANEL */
-.right-panel { flex: 1; padding: 28px 32px 60px; min-width: 0; }
+.tutorial-content { max-width: 800px; margin: 0 auto; }
+.right-panel { padding: 28px 32px 60px; }
 
 .overview-card {
   background: var(--card); border-radius: var(--radius); padding: 28px;
@@ -159,8 +109,8 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 .overview-card h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 10px; }
 .overview-card .analysis { line-height: 1.8; color: var(--text-mid); font-size: 14.5px; }
 .overview-meta { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
-.overview-meta .meta-item .meta-label { font-size: 11px; color: var(--text-light); }
-.overview-meta .meta-item .meta-value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+.overview-meta .meta-label { font-size: 11px; color: var(--text-light); }
+.overview-meta .meta-value { font-size: 14px; font-weight: 600; margin-top: 4px; }
 
 .list-row { display: flex; gap: 18px; margin-bottom: 28px; flex-wrap: wrap; }
 .list-card {
@@ -174,28 +124,21 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 .list-item .spec { font-size: 12.5px; color: var(--text-mid); margin-top: 3px; }
 .list-item .qty { font-size: 12px; color: var(--accent); margin-top: 2px; }
 
-.section-divider {
-  display: flex; align-items: center; gap: 16px; margin: 32px 0 28px;
-}
+.section-divider { display: flex; align-items: center; gap: 16px; margin: 32px 0 28px; }
 .section-divider .line { flex: 1; height: 1px; background: var(--border); }
 .section-divider .title { font-family: var(--font-display); font-size: 18px; color: var(--accent); font-weight: 600; }
 
-/* STEP CARD */
 .step-card {
   background: var(--card); border-radius: var(--radius); padding: 28px 28px 24px;
-  margin-bottom: 18px; border-left: 3px solid transparent;
-  box-shadow: var(--shadow); transition: all 0.35s ease;
+  margin-bottom: 18px; border-left: 3px solid var(--accent); box-shadow: var(--shadow);
 }
-.step-card.active { border-left-color: var(--accent); box-shadow: var(--shadow-active); }
 .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
 .step-num {
   width: 42px; height: 42px; border-radius: 50%;
   background: var(--accent-soft); color: var(--accent);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-size: 20px; font-weight: 700;
-  transition: all 0.3s; flex-shrink: 0;
+  font-family: var(--font-display); font-size: 20px; font-weight: 700; flex-shrink: 0;
 }
-.step-card.active .step-num { background: var(--accent); color: #fff; }
 .step-icon { font-size: 22px; }
 .step-title-wrap { flex: 1; }
 .step-title-wrap h3 { font-size: 17px; font-weight: 600; }
@@ -205,16 +148,9 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
   padding: 4px 12px; border-radius: 20px; font-weight: 500; white-space: nowrap;
 }
 .step-desc { line-height: 1.85; color: var(--text-mid); font-size: 14.5px; margin-bottom: 20px; }
-.step-content { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
-.step-illustration {
-  flex: 0 0 140px; background: var(--bg); border-radius: 10px;
-  padding: 12px 8px; display: flex; justify-content: center;
-}
-.step-illustration svg { width: 100%; max-width: 180px; }
-.tips-wrap { flex: 1; min-width: 200px; }
 .tips-box {
-  background: var(--sage-soft); border-radius: 10px; padding: 14px 18px;
-  border-left: 3px solid var(--sage);
+  margin-top: 16px; background: var(--sage-soft); border-radius: 10px;
+  padding: 14px 18px; border-left: 3px solid var(--sage);
 }
 .tips-box .tips-label { font-size: 12px; font-weight: 600; color: var(--sage); margin-bottom: 6px; }
 .tips-box p { font-size: 13.5px; line-height: 1.7; color: var(--text-mid); }
@@ -234,14 +170,12 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 .trouble-item .a { font-size: 13px; color: var(--text-mid); padding-left: 22px; }
 
 .step-progress { text-align: right; font-size: 11px; color: var(--text-light); margin-top: 12px; }
-
 .completion { text-align: center; padding: 48px 24px; }
 .completion .emoji { font-size: 48px; margin-bottom: 16px; }
 .completion h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 8px; }
 .completion p { color: var(--text-mid); font-size: 14px; line-height: 1.7; max-width: 400px; margin: 0 auto; }
 .completion .btn-primary { margin-top: 24px; }
 
-/* ERROR TOAST */
 .error-toast {
   position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
   background: #c0392b; color: #fff; padding: 12px 24px; border-radius: 10px;
@@ -257,33 +191,33 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 </head>
 <body>
 
-<!-- ═══════════════════════ UPLOAD SCREEN ═══════════════════════ -->
+<!-- UPLOAD -->
 <div id="upload-screen" class="screen active">
   <div class="upload-screen">
     <div class="brand">
       <h1>UNCUT</h1>
       <p class="sub">AI-Powered Draping Guide</p>
       <div class="line"></div>
-      <p class="desc">上传你的设计灵感图片，AI 将为你生成详细的分步立裁操作教程</p>
+      <p class="desc">上传参考图片，AI 将为你生成详细的分步立裁操作教程</p>
     </div>
     <div class="drop-zone" id="drop-zone">
       <input type="file" id="file-input" accept="image/*" hidden>
       <div id="drop-placeholder">
-        <div class="icon">✂️</div>
-        <p class="label">拖拽图片到这里</p>
+        <div class="icon">&#9986;</div>
+        <p class="label">拖拽参考图片到这里</p>
         <p class="sublabel">或点击选择文件 · 支持 JPG / PNG</p>
       </div>
       <img id="preview-img" style="display:none;" alt="preview">
     </div>
     <div class="actions" id="upload-actions" style="display:none;">
       <button class="btn btn-secondary" id="btn-reselect">重新选择</button>
-      <button class="btn btn-primary" id="btn-analyze">开始分析 →</button>
+      <button class="btn btn-primary" id="btn-analyze">生成立裁教程 &rarr;</button>
     </div>
-    <p class="footer-note">Powered by Claude · For draping enthusiasts</p>
+    <p class="footer-note">Powered by Claude</p>
   </div>
 </div>
 
-<!-- ═══════════════════════ LOADING SCREEN ═══════════════════════ -->
+<!-- LOADING -->
 <div id="loading-screen" class="screen">
   <div class="loading-screen">
     <div class="form-wrap">
@@ -300,141 +234,98 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
   </div>
 </div>
 
-<!-- ═══════════════════════ TUTORIAL SCREEN ═══════════════════════ -->
+<!-- TUTORIAL -->
 <div id="tutorial-screen" class="screen">
   <div class="topbar">
-    <button class="back-btn" id="btn-back">← 返回</button>
+    <button class="back-btn" id="btn-back">&larr; 返回</button>
     <h2 id="design-name"></h2>
     <div class="difficulty" id="difficulty-dots"></div>
   </div>
-  <div class="dual-panel">
-    <div class="left-panel" id="left-panel">
-      <div class="annotated-image" id="annotated-image">
-        <img id="tutorial-img" src="" alt="设计图">
-        <div class="overlay" id="anno-overlay"></div>
-      </div>
-      <div class="form-card" id="form-card">
-        <div class="lbl">当前步骤区域示意</div>
-        <div id="form-svg-container"></div>
-      </div>
-      <div class="step-nav" id="step-nav"></div>
-    </div>
+  <div class="tutorial-content">
     <div class="right-panel" id="right-panel"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════ ERROR TOAST ═══════════════════════ -->
+<!-- ERROR -->
 <div class="error-toast" id="error-toast">
   <span id="error-msg"></span>
-  <button class="close-btn" id="error-close">✕</button>
+  <button class="close-btn" id="error-close">&times;</button>
 </div>
 
 <script>
-/* ══════════════════════════════════════════════════════
-   CONSTANTS & CONFIG
-   ══════════════════════════════════════════════════════ */
-const ICONS = { pin:"📌", scissors:"✂️", pencil:"✏️", ruler:"📐", hand:"✋", fold:"🔄", iron:"🔥", measure:"📏" };
-const AREA_LABELS = { neck:"领口", shoulder:"肩部", chest:"胸部", waist:"腰部", hip:"臀部", hem:"下摆", side:"侧缝", back:"后背", full:"整体" };
-const AREA_HIGHLIGHT = {
-  neck:{y:12,h:28}, shoulder:{y:33,h:28}, chest:{y:58,h:55}, waist:{y:110,h:48},
-  hip:{y:155,h:50}, hem:{y:200,h:35}, side:{y:58,h:100,side:true}, back:{y:40,h:140}, full:{y:12,h:223}
-};
-const DIFFICULTY_LABELS = ["","入门","初级","中等","中高","高级"];
-const FORM_PATH = "M80,15 C80,15 93,18 93,36 L130,46 C133,50 128,58 124,72 C120,86 123,94 121,110 C119,126 109,138 108,145 C107,153 109,163 114,178 C120,193 122,204 119,218 L116,235 L44,235 C41,218 40,204 46,178 C51,163 53,153 52,145 C51,138 41,126 39,110 C37,94 40,86 36,72 C32,58 27,50 30,46 L67,36 C67,18 80,15 80,15 Z";
-const AREA_POS = {
-  neck:{t:"10%",l:"50%"}, shoulder:{t:"16%",l:"62%"}, chest:{t:"28%",l:"45%"},
-  waist:{t:"45%",l:"52%"}, hip:{t:"58%",l:"55%"}, hem:{t:"78%",l:"50%"},
-  side:{t:"38%",l:"80%"}, back:{t:"32%",l:"50%"}, full:{t:"42%",l:"50%"}
-};
+/* ====== CONSTANTS ====== */
+var ICONS = { pin:"\uD83D\uDCCC", scissors:"\u2702\uFE0F", pencil:"\u270F\uFE0F", ruler:"\uD83D\uDCD0", hand:"\u270B", fold:"\uD83D\uDD04", iron:"\uD83D\uDD25", measure:"\uD83D\uDCCF" };
+var AREA_LABELS = { neck:"\u9886\u53E3", shoulder:"\u80A9\u90E8", chest:"\u80F8\u90E8", waist:"\u8170\u90E8", hip:"\u81C0\u90E8", hem:"\u4E0B\u6446", side:"\u4FA7\u7F1D", back:"\u540E\u80CC", full:"\u6574\u4F53" };
+var DIF_LABELS = ["","入门","初级","中等","中高","高级"];
 
-const PROMPT = `你是一位拥有20年经验的立裁（draping）大师和时装设计教育家。请分析这张立裁/服装设计图片，为零基础初学者提供一份完整的、手把手的立裁操作教程。
+/* ====== STATE ====== */
+var fileBase64 = null;
+var fileMediaType = null;
+var tutorialData = null;
 
-请用中文回答。严格只返回JSON，不要有任何其他文字、markdown标记或代码块：
-{"designName":"简洁的设计名称","designAnalysis":"2-3句话描述这件设计的核心特征和整体风格","difficulty":3,"difficultyReason":"难度评估原因","estimatedTime":"预计完成时间","materials":[{"item":"材料名","spec":"规格克重质地等","qty":"用量"}],"tools":[{"name":"工具名","purpose":"用途"}],"steps":[{"title":"步骤标题","desc":"详细操作说明，用初学者能理解的语言描述手怎么放、布怎么摆、针怎么插，至少3-4句话","technique":"核心技法","icon":"pin","area":"chest","tips":"操作贴士","troubles":[{"q":"可能的问题","a":"解决方法"}]}]}
+/* ====== HELPERS ====== */
+function $(id) { return document.getElementById(id); }
+var screens = { upload: $('upload-screen'), loading: $('loading-screen'), tutorial: $('tutorial-screen') };
 
-要求：1.步骤详细，每步只做一个核心动作 2.通俗易懂，专业术语附解释 3.提供8-15个步骤 4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full 5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure`;
-
-/* ══════════════════════════════════════════════════════
-   STATE
-   ══════════════════════════════════════════════════════ */
-let fileBase64 = null;
-let fileMediaType = null;
-let previewUrl = null;
-let tutorialData = null;
-let activeStep = 0;
-let stepObservers = [];
-
-/* ══════════════════════════════════════════════════════
-   DOM REFS
-   ══════════════════════════════════════════════════════ */
-const $ = id => document.getElementById(id);
-const screens = { upload: $('upload-screen'), loading: $('loading-screen'), tutorial: $('tutorial-screen') };
-
-/* ══════════════════════════════════════════════════════
-   NAVIGATION
-   ══════════════════════════════════════════════════════ */
 function showScreen(name) {
-  Object.values(screens).forEach(s => s.classList.remove('active'));
+  for (var k in screens) screens[k].classList.remove('active');
   screens[name].classList.add('active');
 }
 
-/* ══════════════════════════════════════════════════════
-   SVG HELPERS
-   ══════════════════════════════════════════════════════ */
-function createFormSVG(area, num, animated) {
-  const hl = AREA_HIGHLIGHT[area] || AREA_HIGHLIGHT.full;
-  const clipId = `fc-${num||'x'}-${Math.random().toString(36).slice(2,6)}`;
-  let highlightRect;
-  if (hl.side) {
-    highlightRect = `<rect x="100" y="${hl.y}" width="60" height="${hl.h}" rx="4" fill="#B8856C" opacity="0.18" clip-path="url(#${clipId})"/>`;
-  } else {
-    highlightRect = `<rect x="0" y="${hl.y}" width="160" height="${hl.h}" rx="4" fill="#B8856C" opacity="0.18" clip-path="url(#${clipId})"/>`;
-  }
-  const pathStyle = animated ? 'stroke-dasharray:1200;animation:formDraw 2.5s ease forwards' : '';
-  const badge = num ? `<circle cx="80" cy="130" r="16" fill="#B8856C" opacity="0.9"/>
-    <text x="80" y="135" font-size="14" fill="#fff" font-family="'Cormorant Garamond',serif" font-weight="700" text-anchor="middle">${num}</text>` : '';
+function showError(msg) {
+  $('error-msg').textContent = msg;
+  $('error-toast').classList.add('visible');
+}
+$('error-close').addEventListener('click', function() { $('error-toast').classList.remove('visible'); });
 
-  return `<svg viewBox="0 0 160 300" style="width:100%;max-width:180px">
-    <defs><clipPath id="${clipId}"><path d="${FORM_PATH}"/></clipPath></defs>
-    ${highlightRect}
-    <path d="${FORM_PATH}" fill="none" stroke="#1a1a1a" stroke-width="1.5" style="${pathStyle}"/>
-    <line x1="80" y1="36" x2="80" y2="235" stroke="#1a1a1a" stroke-width="0.4" stroke-dasharray="3,4" opacity="0.35"/>
-    <line x1="36" y1="90" x2="124" y2="90" stroke="#B8856C" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.5"/>
-    <line x1="50" y1="145" x2="110" y2="145" stroke="#B8856C" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.5"/>
-    <line x1="42" y1="195" x2="118" y2="195" stroke="#B8856C" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.5"/>
-    <text x="155" y="93" font-size="7" fill="#999" font-family="sans-serif" text-anchor="end">胸围线</text>
-    <text x="155" y="148" font-size="7" fill="#999" font-family="sans-serif" text-anchor="end">腰围线</text>
-    <text x="155" y="198" font-size="7" fill="#999" font-family="sans-serif" text-anchor="end">臀围线</text>
-    <line x1="80" y1="235" x2="80" y2="272" stroke="#1a1a1a" stroke-width="1.5"/>
-    <ellipse cx="80" cy="275" rx="28" ry="6" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
-    ${badge}
-    <text x="80" y="256" font-size="8" fill="#B8856C" font-family="sans-serif" font-weight="600" text-anchor="middle">${AREA_LABELS[area]||""}</text>
-  </svg>`;
+/* ====== SAFE REPEAT (核心修复) ====== */
+function safeRepeat(str, n) {
+  var count = parseInt(n, 10);
+  if (!isFinite(count) || count < 0) count = 0;
+  if (count > 100) count = 100;
+  return str.repeat(count);
 }
 
-/* ══════════════════════════════════════════════════════
-   UPLOAD HANDLING
-   ══════════════════════════════════════════════════════ */
-const dropZone = $('drop-zone');
-const fileInput = $('file-input');
-const previewImg = $('preview-img');
-const placeholder = $('drop-placeholder');
+/* ====== IMAGE COMPRESS ====== */
+function compressImage(file) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width, h = img.height;
+      var maxSize = 800;
+      if (w > maxSize || h > maxSize) {
+        var ratio = Math.min(maxSize / w, maxSize / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      resolve({ base64: dataUrl.split(',')[1], mediaType: 'image/jpeg' });
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* ====== UPLOAD ====== */
+var dropZone = $('drop-zone');
+var fileInput = $('file-input');
+var previewImg = $('preview-img');
+var placeholder = $('drop-placeholder');
 
 function processFile(file) {
   if (!file || !file.type.startsWith('image/')) return;
-  previewUrl = URL.createObjectURL(file);
-  previewImg.src = previewUrl;
+  previewImg.src = URL.createObjectURL(file);
   previewImg.style.display = 'block';
   placeholder.style.display = 'none';
   dropZone.classList.add('has-preview');
   $('upload-actions').style.display = 'flex';
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    fileBase64 = reader.result.split(',')[1];
-    fileMediaType = file.type;
-  };
-  reader.readAsDataURL(file);
+  compressImage(file).then(function(result) {
+    fileBase64 = result.base64;
+    fileMediaType = result.mediaType;
+  });
 }
 
 function resetUpload() {
@@ -443,30 +334,19 @@ function resetUpload() {
   placeholder.style.display = 'flex';
   dropZone.classList.remove('has-preview');
   $('upload-actions').style.display = 'none';
-  fileBase64 = null; fileMediaType = null; previewUrl = null;
+  fileBase64 = null;
+  fileMediaType = null;
   fileInput.value = '';
 }
 
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); processFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', e => processFile(e.target.files[0]));
+dropZone.addEventListener('click', function() { fileInput.click(); });
+dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('drag-over'); });
+dropZone.addEventListener('drop', function(e) { e.preventDefault(); dropZone.classList.remove('drag-over'); processFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', function(e) { processFile(e.target.files[0]); });
 $('btn-reselect').addEventListener('click', resetUpload);
 
-/* ══════════════════════════════════════════════════════
-   ERROR HANDLING
-   ══════════════════════════════════════════════════════ */
-function showError(msg) {
-  $('error-msg').textContent = msg;
-  $('error-toast').classList.add('visible');
-}
-$('error-close').addEventListener('click', () => $('error-toast').classList.remove('visible'));
-
-/* ══════════════════════════════════════════════════════
-   AI ANALYSIS
-   ══════════════════════════════════════════════════════ */
-
+/* ====== ANALYZE ====== */
 async function analyze() {
   if (!fileBase64) return;
   $('btn-analyze').disabled = true;
@@ -474,278 +354,165 @@ async function analyze() {
   showScreen('loading');
 
   try {
-    // 调用后端 Edge Function 代理（30 秒超时）
-    const resp = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageBase64: fileBase64,
-        mediaType: fileMediaType
-      })
-    });
+    var controller = new AbortController();
+    var timeout = setTimeout(function() { controller.abort(); }, 150000);
 
-    // 读取原始文本，避免非 JSON 响应导致崩溃
-    const rawText = await resp.text();
-    let json;
-    try { json = JSON.parse(rawText); }
-    catch { throw new Error(rawText.substring(0, 200) || `请求失败: ${resp.status}`); }
+    var resp;
+    try {
+      resp = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({ imageBase64: fileBase64, mediaType: fileMediaType })
+      });
+    } catch (e) {
+      if (e.name === 'AbortError') throw new Error('请求超时（150秒），请稍后重试');
+      throw new Error('网络请求失败，请检查网络连接');
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    var rawText = await resp.text();
+    var json;
+    try { json = JSON.parse(rawText); } catch (e) {
+      console.error('Non-JSON response:', rawText.substring(0, 300));
+      throw new Error('服务器返回了异常响应，请稍后重试');
+    }
 
     if (!resp.ok) {
-      throw new Error(json.error?.message || json.error || `请求失败: ${resp.status}`);
+      throw new Error(json.error || '请求失败 (' + resp.status + ')');
     }
 
-    const text = (json.content || []).map(b => b.type === "text" ? b.text : "").join("");
-    const clean = text.replace(/```json\s*|```\s*/g, "").trim();
-
-    let parsed;
-    try { parsed = JSON.parse(clean); }
-    catch {
-      // 尝试提取最外层 JSON 对象
-      const m = clean.match(/\{[\s\S]*\}/);
-      if (m) {
-        let fixedJson = m[0];
-        // 修复常见 JSON 问题
-        fixedJson = fixedJson.replace(/,\s*([}\]])/g, '$1');           // 去除尾逗号
-        fixedJson = fixedJson.replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":'); // 补全未加引号的 key
-        fixedJson = fixedJson.replace(/:\s*'([^']*)'/g, ':"$1"');       // 单引号改双引号
-        fixedJson = fixedJson.replace(/[\x00-\x1F]/g, ' ');            // 去除控制字符
-        try { parsed = JSON.parse(fixedJson); }
-        catch {
-          // 最后尝试：截断到最后一个完整的 } 并补全
-          let depth = 0, lastValid = 0;
-          for (let i = 0; i < fixedJson.length; i++) {
-            if (fixedJson[i] === '{') depth++;
-            if (fixedJson[i] === '}') { depth--; if (depth === 0) { lastValid = i; break; } }
-          }
-          if (lastValid > 0) {
-            try { parsed = JSON.parse(fixedJson.substring(0, lastValid + 1)); }
-            catch { throw new Error("无法解析 AI 返回的内容，请重试"); }
-          } else {
-            throw new Error("无法解析 AI 返回的内容，请重试");
-          }
-        }
-      } else {
-        throw new Error("无法解析 AI 返回的内容，请重试");
-      }
+    if (!json.tutorial) {
+      console.error('Missing tutorial:', Object.keys(json));
+      throw new Error('服务器返回数据格式异常，请重试');
     }
 
-    tutorialData = parsed;
+    tutorialData = json.tutorial;
     renderTutorial();
     showScreen('tutorial');
   } catch (err) {
-    console.error(err);
-    showError(err.message || "分析失败，请重试");
+    console.error('Analyze error:', err);
+    showError(err.message || '分析失败，请重试');
     showScreen('upload');
   } finally {
     $('btn-analyze').disabled = false;
-    $('btn-analyze').textContent = '开始分析 →';
+    $('btn-analyze').textContent = '生成立裁教程 \u2192';
   }
 }
-
 $('btn-analyze').addEventListener('click', analyze);
 
-/* ══════════════════════════════════════════════════════
-   BACK BUTTON
-   ══════════════════════════════════════════════════════ */
-$('btn-back').addEventListener('click', () => {
-  stepObservers.forEach(obs => obs.disconnect());
-  stepObservers = [];
+/* ====== BACK ====== */
+$('btn-back').addEventListener('click', function() {
   tutorialData = null;
-  activeStep = 0;
   resetUpload();
   showScreen('upload');
 });
 
-/* ══════════════════════════════════════════════════════
-   RENDER TUTORIAL
-   ══════════════════════════════════════════════════════ */
+/* ====== RENDER ====== */
 function renderTutorial() {
-  const d = tutorialData;
-  activeStep = 0;
+  var d = tutorialData;
+  if (!d) { showError('没有教程数据'); showScreen('upload'); return; }
 
-  // Topbar
-  $('design-name').textContent = d.designName;
-  const difDots = $('difficulty-dots');
-  difDots.innerHTML = [1,2,3,4,5].map(i =>
-    `<div class="dot ${i <= d.difficulty ? 'filled' : ''}"></div>`
-  ).join('') + `<span class="label">${DIFFICULTY_LABELS[d.difficulty]||""}</span>`;
+  // difficulty: 强制转成 0-5 之间的安全整数
+  var dif = parseInt(d.difficulty, 10);
+  if (isNaN(dif) || dif < 0) dif = 3;
+  if (dif > 5) dif = 5;
 
-  // Left panel image
-  $('tutorial-img').src = previewUrl;
-  renderAnnotations();
-  renderFormCard();
-  renderStepNav();
+  // topbar
+  $('design-name').textContent = d.designName || '立裁教程';
+  var difDotsHtml = '';
+  for (var i = 1; i <= 5; i++) {
+    difDotsHtml += '<div class="dot' + (i <= dif ? ' filled' : '') + '"></div>';
+  }
+  difDotsHtml += '<span class="label">' + (DIF_LABELS[dif] || '') + '</span>';
+  $('difficulty-dots').innerHTML = difDotsHtml;
 
-  // Right panel
-  const rp = $('right-panel');
-  rp.innerHTML = '';
+  // right panel
+  var rp = $('right-panel');
+  var html = '';
 
-  // Overview
-  rp.innerHTML += `
-    <div class="overview-card">
-      <h3>设计总览</h3>
-      <p class="analysis">${d.designAnalysis}</p>
-      <div class="overview-meta">
-        <div class="meta-item"><div class="meta-label">难度</div><div class="meta-value">${'●'.repeat(d.difficulty)}${'○'.repeat(5-d.difficulty)} ${DIFFICULTY_LABELS[d.difficulty]||""}</div></div>
-        <div class="meta-item"><div class="meta-label">预计时间</div><div class="meta-value">${d.estimatedTime}</div></div>
-        <div class="meta-item"><div class="meta-label">步骤数</div><div class="meta-value">${d.steps.length} 步</div></div>
-      </div>
-    </div>`;
+  // overview - 用 safeRepeat 确保绝不报错
+  var steps = Array.isArray(d.steps) ? d.steps : [];
+  html += '<div class="overview-card">';
+  html += '<h3>设计总览</h3>';
+  html += '<p class="analysis">' + (d.designAnalysis || '') + '</p>';
+  html += '<div class="overview-meta">';
+  html += '<div class="meta-item"><div class="meta-label">难度</div><div class="meta-value">' + safeRepeat('●', dif) + safeRepeat('○', 5 - dif) + ' ' + (DIF_LABELS[dif] || '') + '</div></div>';
+  html += '<div class="meta-item"><div class="meta-label">预计时间</div><div class="meta-value">' + (d.estimatedTime || '未知') + '</div></div>';
+  html += '<div class="meta-item"><div class="meta-label">步骤数</div><div class="meta-value">' + steps.length + ' 步</div></div>';
+  html += '</div></div>';
 
-  // Materials + Tools
-  let matsHtml = d.materials.map(m => `
-    <div class="list-item">
-      <div class="name">${m.item}</div>
-      <div class="spec">${m.spec}</div>
-      <div class="qty">用量：${m.qty}</div>
-    </div>`).join('');
+  // materials
+  var mats = Array.isArray(d.materials) ? d.materials : [];
+  var matsHtml = '';
+  for (var mi = 0; mi < mats.length; mi++) {
+    var m = mats[mi];
+    matsHtml += '<div class="list-item"><div class="name">' + (m.item || '') + '</div><div class="spec">' + (m.spec || '') + '</div><div class="qty">用量：' + (m.qty || '适量') + '</div></div>';
+  }
+  if (!matsHtml) matsHtml = '<p style="color:#999;font-size:13px">暂无材料信息</p>';
 
-  let toolsHtml = d.tools.map(t => `
-    <div class="list-item">
-      <div class="name">${t.name}</div>
-      <div class="spec">${t.purpose}</div>
-    </div>`).join('');
+  // tools
+  var tools = Array.isArray(d.tools) ? d.tools : [];
+  var toolsHtml = '';
+  for (var ti = 0; ti < tools.length; ti++) {
+    var t = tools[ti];
+    toolsHtml += '<div class="list-item"><div class="name">' + (t.name || '') + '</div><div class="spec">' + (t.purpose || '') + '</div></div>';
+  }
+  if (!toolsHtml) toolsHtml = '<p style="color:#999;font-size:13px">暂无工具信息</p>';
 
-  rp.innerHTML += `
-    <div class="list-row" style="animation:fadeUp 0.5s ease 0.1s both">
-      <div class="list-card"><h4>🧵 材料清单</h4>${matsHtml}</div>
-      <div class="list-card"><h4>🔧 工具清单</h4>${toolsHtml}</div>
-    </div>`;
+  html += '<div class="list-row" style="animation:fadeUp 0.5s ease 0.1s both">';
+  html += '<div class="list-card"><h4>\uD83E\uDDF5 材料清单</h4>' + matsHtml + '</div>';
+  html += '<div class="list-card"><h4>\uD83D\uDD27 工具清单</h4>' + toolsHtml + '</div>';
+  html += '</div>';
 
-  // Divider
-  rp.innerHTML += `
-    <div class="section-divider">
-      <div class="line"></div>
-      <span class="title">操作步骤</span>
-      <div class="line"></div>
-    </div>`;
+  // divider
+  html += '<div class="section-divider"><div class="line"></div><span class="title">操作步骤</span><div class="line"></div></div>';
 
-  // Steps
-  d.steps.forEach((s, i) => {
-    const icon = ICONS[s.icon] || "📌";
-    const areaLabel = AREA_LABELS[s.area] || s.area;
-    let troublesHtml = '';
-    if (s.troubles && s.troubles.length) {
-      troublesHtml = `
-        <div class="trouble-section">
-          <button class="trouble-toggle" onclick="this.querySelector('.arrow').classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-            <span class="arrow">▸</span> ⚠️ 常见问题排解 (${s.troubles.length})
-          </button>
-          <div class="trouble-content">
-            ${s.troubles.map(t => `<div class="trouble-item"><p class="q">❓ ${t.q}</p><p class="a">→ ${t.a}</p></div>`).join('')}
-          </div>
-        </div>`;
+  // steps
+  for (var si = 0; si < steps.length; si++) {
+    var s = steps[si];
+    var icon = ICONS[s.icon] || '\uD83D\uDCCC';
+    var areaLabel = AREA_LABELS[s.area] || s.area || '';
+
+    html += '<div class="step-card" style="animation:fadeUp 0.5s ease ' + (si * 0.06) + 's both">';
+    html += '<div class="step-header">';
+    html += '<div class="step-num">' + (si + 1) + '</div>';
+    html += '<span class="step-icon">' + icon + '</span>';
+    html += '<div class="step-title-wrap"><h3>' + (s.title || '') + '</h3>';
+    if (s.technique) html += '<span class="technique">技法：' + s.technique + '</span>';
+    html += '</div>';
+    html += '<span class="area-tag">' + areaLabel + '</span>';
+    html += '</div>';
+    html += '<p class="step-desc">' + (s.desc || '') + '</p>';
+
+    if (s.tips) {
+      html += '<div class="tips-box"><div class="tips-label">\uD83D\uDCA1 操作贴士</div><p>' + s.tips + '</p></div>';
     }
 
-    rp.innerHTML += `
-      <div class="step-card" data-step="${i}" style="animation:fadeUp 0.5s ease ${i*0.06}s both">
-        <div class="step-header">
-          <div class="step-num">${i+1}</div>
-          <span class="step-icon">${icon}</span>
-          <div class="step-title-wrap">
-            <h3>${s.title}</h3>
-            ${s.technique ? `<span class="technique">技法：${s.technique}</span>` : ''}
-          </div>
-          <span class="area-tag">${areaLabel}</span>
-        </div>
-        <p class="step-desc">${s.desc}</p>
-        <div class="step-content">
-          <div class="step-illustration">${createFormSVG(s.area, i+1)}</div>
-          <div class="tips-wrap">
-            ${s.tips ? `<div class="tips-box"><div class="tips-label">💡 操作贴士</div><p>${s.tips}</p></div>` : ''}
-          </div>
-        </div>
-        ${troublesHtml}
-        <div class="step-progress">步骤 ${i+1} / ${d.steps.length}</div>
-      </div>`;
-  });
+    var troubles = Array.isArray(s.troubles) ? s.troubles : [];
+    if (troubles.length > 0) {
+      html += '<div class="trouble-section">';
+      html += '<button class="trouble-toggle" onclick="this.querySelector(\'.arrow\').classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'open\')">';
+      html += '<span class="arrow">\u25B8</span> \u26A0\uFE0F 常见问题排解 (' + troubles.length + ')';
+      html += '</button><div class="trouble-content">';
+      for (var tbi = 0; tbi < troubles.length; tbi++) {
+        html += '<div class="trouble-item"><p class="q">\u2753 ' + (troubles[tbi].q || '') + '</p><p class="a">\u2192 ' + (troubles[tbi].a || '') + '</p></div>';
+      }
+      html += '</div></div>';
+    }
 
-  // Completion
-  rp.innerHTML += `
-    <div class="completion">
-      <div class="emoji">🎉</div>
-      <h3>教程完成！</h3>
-      <p>按照以上步骤操作，你就能在人台上实现这个设计。记得边做边拍照记录，如果遇到问题可以随时回来参考。</p>
-      <button class="btn btn-primary" onclick="document.getElementById('btn-back').click()">分析新的设计 →</button>
-    </div>`;
+    html += '<div class="step-progress">步骤 ' + (si + 1) + ' / ' + steps.length + '</div>';
+    html += '</div>';
+  }
 
-  // Setup IntersectionObserver for step cards
-  setupStepObservers();
-}
+  // completion
+  html += '<div class="completion"><div class="emoji">\uD83C\uDF89</div><h3>教程完成！</h3>';
+  html += '<p>按照以上步骤操作，你就能在人台上实现这个设计。记得边做边拍照记录。</p>';
+  html += '<button class="btn btn-primary" onclick="document.getElementById(\'btn-back\').click()">分析新的设计 \u2192</button>';
+  html += '</div>';
 
-/* ══════════════════════════════════════════════════════
-   LEFT PANEL RENDERERS
-   ══════════════════════════════════════════════════════ */
-function renderAnnotations() {
-  const overlay = $('anno-overlay');
-  const steps = tutorialData.steps;
-  const usedAreas = {};
-  overlay.innerHTML = steps.map((s, i) => {
-    const pos = AREA_POS[s.area] || AREA_POS.full;
-    if (!usedAreas[s.area]) usedAreas[s.area] = 0;
-    const offset = usedAreas[s.area] * 18;
-    usedAreas[s.area]++;
-    return `<div class="anno-dot ${i === activeStep ? 'active' : ''}" data-anno="${i}"
-      style="top:calc(${pos.t} + ${offset}px);left:${pos.l}">${i+1}</div>`;
-  }).join('');
-}
-
-function renderFormCard() {
-  const area = tutorialData.steps[activeStep]?.area || 'full';
-  $('form-svg-container').innerHTML = createFormSVG(area, activeStep+1);
-}
-
-function renderStepNav() {
-  $('step-nav').innerHTML = tutorialData.steps.map((s, i) =>
-    `<button class="nav-dot ${i === activeStep ? 'active' : ''}" data-nav="${i}">${i+1}</button>`
-  ).join('');
-
-  $('step-nav').querySelectorAll('.nav-dot').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.nav);
-      const card = document.querySelector(`.step-card[data-step="${idx}"]`);
-      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  });
-}
-
-function updateActiveStep(idx) {
-  if (idx === activeStep) return;
-  activeStep = idx;
-
-  // Update annotations
-  document.querySelectorAll('.anno-dot').forEach(d => {
-    d.classList.toggle('active', parseInt(d.dataset.anno) === idx);
-  });
-
-  // Update form card
-  renderFormCard();
-
-  // Update nav dots
-  document.querySelectorAll('.nav-dot').forEach(d => {
-    d.classList.toggle('active', parseInt(d.dataset.nav) === idx);
-  });
-
-  // Update step cards
-  document.querySelectorAll('.step-card').forEach(c => {
-    c.classList.toggle('active', parseInt(c.dataset.step) === idx);
-  });
-}
-
-/* ══════════════════════════════════════════════════════
-   INTERSECTION OBSERVER
-   ══════════════════════════════════════════════════════ */
-function setupStepObservers() {
-  stepObservers.forEach(obs => obs.disconnect());
-  stepObservers = [];
-
-  document.querySelectorAll('.step-card').forEach(card => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) updateActiveStep(parseInt(card.dataset.step));
-    }, { threshold: 0.4 });
-    obs.observe(card);
-    stepObservers.push(obs);
-  });
+  rp.innerHTML = html;
 }
 </script>
 </body>

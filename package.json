@@ -4,16 +4,8 @@
   "description": "立裁工坊 - AI 驱动的服装立裁教学平台",
   "private": true,
   "scripts": {
-    "dev": "vercel dev",
-    "build": "mkdir -p public && cp index.html public/",
-    "start": "vercel dev"
+    "dev": "vercel dev"
   },
-  "keywords": [
-    "draping",
-    "fashion",
-    "ai",
-    "tutorial"
-  ],
-  "author": "",
+  "keywords": ["draping", "fashion", "ai", "tutorial"],
   "license": "MIT"
 }
