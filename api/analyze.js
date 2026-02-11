@@ -183,33 +183,146 @@ function extractJSON(rawText) {
 /**
  * 校验并补全解析后的数据，确保前端不会崩溃
  */
+// 默认材料和工具，当 Claude 返回空数组时使用
+const DEFAULT_MATERIALS = [
+  { item: '白色坯布（胚布）', spec: '纯棉，中等克重，幅宽150cm', qty: '2-3米' },
+  { item: '大头针/珠针', spec: '不锈钢，长3cm', qty: '一盒（约50枚）' },
+  { item: '标记笔/划粉', spec: '可水洗消失', qty: '1支' },
+  { item: '缝纫线', spec: '棉线，白色', qty: '1卷' },
+];
+const DEFAULT_TOOLS = [
+  { name: '人台/人体模型', purpose: '作为立裁的基础支撑，模拟人体曲线' },
+  { name: '裁剪剪刀', purpose: '裁剪布料' },
+  { name: '软尺/皮尺', purpose: '测量尺寸和曲线长度' },
+  { name: '直尺', purpose: '画直线和测量平面距离' },
+];
+
+// 有效的 icon 和 area 列表
+const VALID_ICONS = ['pin','scissors','pencil','ruler','hand','fold','iron','measure','drape','wrap','pleat','gather','tuck','dart','trim','baste'];
+const VALID_AREAS = ['neck','shoulder','chest','waist','hip','hem','side','back','full'];
+
+// 根据步骤标题/描述智能推断 icon
+function inferIcon(step) {
+  const text = ((step.title || '') + ' ' + (step.desc || '')).toLowerCase();
+  if (/裁|剪|cut|trim/.test(text)) return 'scissors';
+  if (/画|标|记|mark|pencil/.test(text)) return 'pencil';
+  if (/量|测|measure|尺/.test(text)) return 'measure';
+  if (/熨|烫|iron|press/.test(text)) return 'iron';
+  if (/折|fold/.test(text)) return 'fold';
+  if (/褶|pleat/.test(text)) return 'pleat';
+  if (/缝|baste|假缝/.test(text)) return 'baste';
+  if (/省|dart/.test(text)) return 'dart';
+  if (/收|gather|抽/.test(text)) return 'gather';
+  if (/披|挂|覆|drape|布料.*放|铺/.test(text)) return 'drape';
+  if (/裹|缠|wrap/.test(text)) return 'wrap';
+  if (/修|整|修边/.test(text)) return 'trim';
+  if (/整理|调整|手|smooth|hand/.test(text)) return 'hand';
+  if (/尺|ruler|直线/.test(text)) return 'ruler';
+  if (/固定|pin|珠针|大头针/.test(text)) return 'pin';
+  if (/叠|tuck|裥/.test(text)) return 'tuck';
+  return null; // 无法推断
+}
+
+// 根据步骤标题/描述智能推断 area
+function inferArea(step) {
+  const text = ((step.title || '') + ' ' + (step.desc || '')).toLowerCase();
+  if (/领|颈|neck|衣领/.test(text)) return 'neck';
+  if (/肩|shoulder/.test(text)) return 'shoulder';
+  if (/胸|chest|bust|前片/.test(text)) return 'chest';
+  if (/腰|waist/.test(text)) return 'waist';
+  if (/臀|hip|胯/.test(text)) return 'hip';
+  if (/摆|hem|底边|下摆/.test(text)) return 'hem';
+  if (/侧|side|边/.test(text)) return 'side';
+  if (/背|后|back/.test(text)) return 'back';
+  return null; // 无法推断
+}
+
 function validateAndFix(data) {
-  return {
-    designName: data.designName || '立裁教程',
-    designAnalysis: data.designAnalysis || '',
-    difficulty: (function() { const n = Number(data.difficulty); return (Number.isFinite(n) && n >= 1 && n <= 5) ? Math.round(n) : 3; })(),
-    difficultyReason: data.difficultyReason || '',
-    estimatedTime: data.estimatedTime || '未知',
-    materials: Array.isArray(data.materials) ? data.materials.map(m => ({
-      item: m.item || '未知材料',
-      spec: m.spec || '',
-      qty: m.qty || '适量'
-    })) : [],
-    tools: Array.isArray(data.tools) ? data.tools.map(t => ({
-      name: t.name || '未知工具',
-      purpose: t.purpose || ''
-    })) : [],
-    steps: Array.isArray(data.steps) ? data.steps.map(s => ({
+  // 修复 designName — 如果它看起来像一句话（太长或包含非设计名词汇），截取或替换
+  let designName = data.designName || '立裁教程';
+  if (designName.length > 30) {
+    // 尝试截取到第一个标点或逗号
+    const cut = designName.match(/^[^，。,\.\!！？\?]+/);
+    designName = cut ? cut[0].substring(0, 20) : designName.substring(0, 20);
+  }
+  // 如果包含明显的对话词汇（Claude 说了一句话而不是设计名），替换掉
+  if (/我注意|我看到|你发送|你上传|这是一|这张图|I see|I notice|you sent|you upload/i.test(designName)) {
+    designName = '立裁设计教程';
+  }
+
+  // 修复 materials — 如果空的，使用默认值
+  let materials = Array.isArray(data.materials) && data.materials.length > 0
+    ? data.materials.map(m => ({ item: m.item || '未知材料', spec: m.spec || '', qty: m.qty || '适量' }))
+    : DEFAULT_MATERIALS;
+
+  // 修复 tools — 如果空的，使用默认值
+  let tools = Array.isArray(data.tools) && data.tools.length > 0
+    ? data.tools.map(t => ({ name: t.name || '未知工具', purpose: t.purpose || '' }))
+    : DEFAULT_TOOLS;
+
+  // 修复 steps
+  let steps = Array.isArray(data.steps) ? data.steps.map(s => {
+    let icon = s.icon || 'pin';
+    let area = s.area || 'full';
+
+    // 验证 icon 是否合法
+    if (!VALID_ICONS.includes(icon)) icon = 'pin';
+    // 验证 area 是否合法
+    if (!VALID_AREAS.includes(area)) area = 'full';
+
+    return {
       title: s.title || '操作步骤',
       desc: s.desc || '',
       technique: s.technique || '',
-      icon: s.icon || 'pin',
-      area: s.area || 'full',
+      icon,
+      area,
       tips: s.tips || '',
       troubles: Array.isArray(s.troubles) ? s.troubles.map(t => ({
         q: t.q || '', a: t.a || ''
       })) : []
-    })) : []
+    };
+  }) : [];
+
+  // 检查 icon 多样性 — 如果全部相同，根据步骤内容智能推断
+  const uniqueIcons = new Set(steps.map(s => s.icon));
+  if (uniqueIcons.size <= 1 && steps.length > 3) {
+    console.log('All icons identical, applying smart inference...');
+    // 用一个循环后备列表来确保多样性
+    const fallbackIcons = ['drape','pin','scissors','pencil','hand','fold','pleat','dart','gather','measure','baste','trim','iron','wrap','tuck','ruler'];
+    steps.forEach((s, i) => {
+      const inferred = inferIcon(s);
+      if (inferred) {
+        s.icon = inferred;
+      } else {
+        s.icon = fallbackIcons[i % fallbackIcons.length];
+      }
+    });
+  }
+
+  // 检查 area 多样性 — 如果全部是 full，根据步骤内容智能推断
+  const uniqueAreas = new Set(steps.map(s => s.area));
+  if (uniqueAreas.size <= 1 && steps.length > 3) {
+    console.log('All areas identical, applying smart inference...');
+    const fallbackAreas = ['full','chest','waist','shoulder','hip','hem','side','back','neck'];
+    steps.forEach((s, i) => {
+      const inferred = inferArea(s);
+      if (inferred) {
+        s.area = inferred;
+      } else {
+        s.area = fallbackAreas[i % fallbackAreas.length];
+      }
+    });
+  }
+
+  return {
+    designName,
+    designAnalysis: data.designAnalysis || '',
+    difficulty: (function() { const n = Number(data.difficulty); return (Number.isFinite(n) && n >= 1 && n <= 5) ? Math.round(n) : 3; })(),
+    difficultyReason: data.difficultyReason || '',
+    estimatedTime: data.estimatedTime || '未知',
+    materials,
+    tools,
+    steps,
   };
 }
 
@@ -233,20 +346,20 @@ export default async function handler(req, res) {
     const { imageBase64, mediaType } = req.body;
     if (!imageBase64 || !mediaType) return res.status(400).json({ error: '缺少图片数据' });
 
-    const PROMPT = `你是一位拥有20年经验的立裁（draping）大师和时装设计教育家。请分析这张立裁/服装设计图片，为零基础初学者提供一份完整的、手把手的立裁操作教程。
+    const PROMPT = `分析此服装设计图，生成立裁教程JSON。直接从designName的值开始续写，因为JSON已经以 {"designName":" 开头了。
 
-请用中文回答。严格只返回JSON，不要有任何其他文字、markdown标记或代码块：
-{"designName":"简洁的设计名称","designAnalysis":"2-3句话描述这件设计的核心特征和整体风格","difficulty":3,"difficultyReason":"难度评估原因","estimatedTime":"预计完成时间","materials":[{"item":"白色坯布（胚布）","spec":"纯棉，中等克重，幅宽150cm","qty":"2米"},{"item":"大头针/珠针","spec":"不锈钢，长3cm","qty":"一盒（约50枚）"}],"tools":[{"name":"人台/人体模型","purpose":"作为立裁的基础支撑"},{"name":"裁剪剪刀","purpose":"裁剪布料"},{"name":"软尺","purpose":"测量尺寸"}],"steps":[{"title":"步骤标题","desc":"详细操作说明，用初学者能理解的语言描述手怎么放、布怎么摆、针怎么插，至少3-4句话","technique":"核心技法","icon":"pin","area":"chest","tips":"操作贴士","troubles":[{"q":"可能的问题","a":"解决方法"}]}]}
+designName：给这个设计取一个简短的中文名称（2-6个字），例如"A字连衣裙"、"不对称半裙"。不要写完整的句子，只要名称。
 
-要求：
-1.步骤详细，每步只做一个核心动作
-2.通俗易懂，专业术语附解释
-3.提供8-15个步骤
-4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full，根据该步骤实际操作区域选择，不要全部用full
-5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure/drape/wrap/pleat/gather/tuck/dart/trim/baste，其中drape=披挂布料,wrap=裹缠,pleat=打褶,gather=收褶,tuck=折裥,dart=省道,trim=修边,baste=假缝。请根据每步的实际操作选择最匹配的icon，至少使用5种不同的icon，不要全部使用pin
-6.所有字符串值内不要包含换行，保持在一行内
-7.materials必须列出至少3种材料（包括布料、辅料等），每种标明规格和用量
-8.tools必须列出至少3种工具，每种标明具体用途`;
+必须填写的字段：
+- materials：至少3种（布料、辅料等），格式 {"item":"名称","spec":"规格","qty":"用量"}
+- tools：至少3种，格式 {"name":"工具名","purpose":"用途"}
+- steps：8-15步，每步格式 {"title":"标题","desc":"详细说明3-4句","technique":"技法","icon":"操作类型","area":"身体区域","tips":"贴士","troubles":[{"q":"问题","a":"解法"}]}
+
+icon必须从以下选择（至少用5种不同的）：pin(珠针固定)/scissors(裁剪)/pencil(标记)/ruler(测量)/hand(整理)/fold(折叠)/iron(熨烫)/measure(量取)/drape(披挂)/wrap(裹缠)/pleat(打褶)/gather(收褶)/tuck(折裥)/dart(省道)/trim(修边)/baste(假缝)
+
+area必须从以下选择（根据实际操作区域选，不要全部用full）：neck/shoulder/chest/waist/hip/hem/side/back/full
+
+用中文。只输出JSON值，不要markdown、不要代码块、不要多余文字。`;
 
     // 构建请求体
     const requestBody = JSON.stringify({
