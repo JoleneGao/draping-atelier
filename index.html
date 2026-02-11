@@ -80,7 +80,9 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 .loading-screen .msg span:nth-child(1) { animation: dotPulse 1.2s infinite 0s; }
 .loading-screen .msg span:nth-child(2) { animation: dotPulse 1.2s infinite 0.2s; }
 .loading-screen .msg span:nth-child(3) { animation: dotPulse 1.2s infinite 0.4s; }
-.loading-screen .submsg { font-size: 13px; color: var(--text-light); margin-top: 10px; }
+.loading-screen .submsg { font-size: 13px; color: var(--text-light); margin-top: 10px; transition: opacity 0.3s ease; min-height: 20px; }
+.progress-bar-wrap { width: 240px; height: 3px; background: var(--border); border-radius: 2px; margin-top: 20px; overflow: hidden; }
+.progress-bar { height: 100%; width: 0%; background: var(--accent); border-radius: 2px; transition: width 1s ease; }
 
 /* TUTORIAL */
 .topbar {
@@ -310,7 +312,8 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
       </svg>
     </div>
     <p class="msg">正在分析你的设计<span>.</span><span>.</span><span>.</span></p>
-    <p class="submsg">AI 正在识别设计结构并生成立裁教程</p>
+    <p class="submsg" id="loading-submsg">AI 正在识别设计结构...</p>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="loading-progress"></div></div>
   </div>
 </div>
 
@@ -349,7 +352,7 @@ body { background: var(--bg); font-family: var(--font-body); color: var(--text);
 
 <script>
 /* ====== CONSTANTS ====== */
-var ICONS = { pin:"\uD83D\uDCCC", scissors:"\u2702\uFE0F", pencil:"\u270F\uFE0F", ruler:"\uD83D\uDCD0", hand:"\u270B", fold:"\uD83D\uDD04", iron:"\uD83D\uDD25", measure:"\uD83D\uDCCF" };
+var ICONS = { pin:"\uD83D\uDCCC", scissors:"\u2702\uFE0F", pencil:"\u270F\uFE0F", ruler:"\uD83D\uDCD0", hand:"\u270B", fold:"\uD83D\uDD04", iron:"\uD83D\uDD25", measure:"\uD83D\uDCCF", drape:"\uD83E\uDDE3", wrap:"\uD83C\uDF00", pleat:"\u2261", gather:"\u301C", tuck:"\u2248", dart:"\u25C7", trim:"\u2704", baste:"\u2500" };
 var AREA_LABELS = { neck:"\u9886\u53E3", shoulder:"\u80A9\u90E8", chest:"\u80F8\u90E8", waist:"\u8170\u90E8", hip:"\u81C0\u90E8", hem:"\u4E0B\u6446", side:"\u4FA7\u7F1D", back:"\u540E\u80CC", full:"\u6574\u4F53" };
 var DIF_LABELS = ["","入门","初级","中等","中高","高级"];
 
@@ -461,6 +464,101 @@ var ACTION_SVG = {
       + '<line x1="'+(p[0]+18)+'" y1="'+(p[1]+19)+'" x2="'+(p[0]+23)+'" y2="'+(p[1]+15)+'" stroke="#B8856C" stroke-width="0.8"/>'
       + '<line x1="'+(p[0]+22)+'" y1="'+(p[1]+27)+'" x2="'+(p[0]+27)+'" y2="'+(p[1]+23)+'" stroke="#B8856C" stroke-width="0.8"/>'
       + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u91CF\u53D6\u5C3A\u5BF8</text>';
+  },
+  drape: function(area) {
+    // 披挂布料：布料从上方自然下垂的弧线
+    var pts = {neck:[100,35],shoulder:[80,45],chest:[100,70],waist:[100,115],hip:[100,175],hem:[100,225],side:[58,110],back:[100,100],full:[100,90]};
+    var p = pts[area] || pts.full;
+    return '<path d="M'+(p[0]-25)+','+(p[1]-15)+' Q'+(p[0]-15)+','+(p[1]+15)+' '+p[0]+','+(p[1]+25)+' Q'+(p[0]+15)+','+(p[1]+15)+' '+(p[0]+25)+','+(p[1]-15)+'" fill="#B8856C" opacity="0.1" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<path d="M'+(p[0]-20)+','+(p[1]-10)+' Q'+(p[0]-10)+','+(p[1]+10)+' '+p[0]+','+(p[1]+18)+'" fill="none" stroke="#B8856C" stroke-width="1" stroke-dasharray="4 3"/>'
+      + '<path d="M'+(p[0]+20)+','+(p[1]-10)+' Q'+(p[0]+10)+','+(p[1]+10)+' '+p[0]+','+(p[1]+18)+'" fill="none" stroke="#B8856C" stroke-width="1" stroke-dasharray="4 3"/>'
+      + '<polygon points="'+p[0]+','+(p[1]+28)+' '+(p[0]-4)+','+(p[1]+22)+' '+(p[0]+4)+','+(p[1]+22)+'" fill="#B8856C" opacity="0.5"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u62AB\u6302\u5E03\u6599</text>';
+  },
+  wrap: function(area) {
+    // 裹缠：布料环绕身体的弧线+箭头
+    var pts = {neck:[100,38],shoulder:[85,48],chest:[100,75],waist:[100,117],hip:[100,180],hem:[100,228],side:[58,120],back:[100,105],full:[100,100]};
+    var p = pts[area] || pts.full;
+    return '<path d="M'+(p[0]+30)+','+(p[1]-15)+' Q'+(p[0]+40)+','+p[1]+' '+(p[0]+25)+','+(p[1]+15)+' Q'+p[0]+','+(p[1]+25)+' '+(p[0]-25)+','+(p[1]+15)+' Q'+(p[0]-40)+','+p[1]+' '+(p[0]-25)+','+(p[1]-15)+'" fill="none" stroke="#B8856C" stroke-width="1.8"/>'
+      + '<polygon points="'+(p[0]-25)+','+(p[1]-15)+' '+(p[0]-18)+','+(p[1]-18)+' '+(p[0]-20)+','+(p[1]-10)+'" fill="#B8856C"/>'
+      + '<path d="M'+(p[0]-20)+','+(p[1]-5)+' Q'+p[0]+','+(p[1]-15)+' '+(p[0]+20)+','+(p[1]-5)+'" fill="#B8856C" opacity="0.08" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u88F9\u7F20\u5E03\u6599</text>';
+  },
+  pleat: function(area) {
+    // 打褶：多条平行折线
+    var pts = {neck:[95,36],shoulder:[80,48],chest:[90,70],waist:[90,112],hip:[90,175],hem:[90,222],side:[55,115],back:[90,100],full:[90,95]};
+    var p = pts[area] || pts.full;
+    var s = '';
+    for (var i = 0; i < 4; i++) {
+      var x = p[0] - 10 + i * 10;
+      s += '<path d="M'+x+','+(p[1]-18)+' L'+(x+5)+','+(p[1])+' L'+x+','+(p[1]+18)+'" fill="none" stroke="#B8856C" stroke-width="1.3"/>';
+    }
+    s += '<path d="M'+(p[0]-15)+','+(p[1])+' L'+(p[0]+25)+','+(p[1])+'" stroke="#B8856C" stroke-width="0.8" stroke-dasharray="3 2"/>';
+    s += '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u6253\u8936</text>';
+    return s;
+  },
+  gather: function(area) {
+    // 收褶/缩褶：波浪线收拢效果
+    var pts = {neck:[95,36],shoulder:[80,48],chest:[95,72],waist:[95,115],hip:[95,178],hem:[95,225],side:[58,115],back:[95,103],full:[95,95]};
+    var p = pts[area] || pts.full;
+    return '<path d="M'+(p[0]-25)+','+p[1]+' Q'+(p[0]-18)+','+(p[1]-8)+' '+(p[0]-12)+','+p[1]+' Q'+(p[0]-6)+','+(p[1]+8)+' '+p[0]+','+p[1]+' Q'+(p[0]+6)+','+(p[1]-8)+' '+(p[0]+12)+','+p[1]+' Q'+(p[0]+18)+','+(p[1]+8)+' '+(p[0]+25)+','+p[1]+'" fill="none" stroke="#B8856C" stroke-width="1.8"/>'
+      + '<line x1="'+(p[0]-25)+'" y1="'+p[1]+'" x2="'+(p[0]-15)+'" y2="'+(p[1]+20)+'" stroke="#B8856C" stroke-width="1" stroke-dasharray="3 2"/>'
+      + '<line x1="'+(p[0]+25)+'" y1="'+p[1]+'" x2="'+(p[0]+15)+'" y2="'+(p[1]+20)+'" stroke="#B8856C" stroke-width="1" stroke-dasharray="3 2"/>'
+      + '<polygon points="'+(p[0]-15)+','+(p[1]+20)+' '+(p[0]+15)+','+(p[1]+20)+' '+p[0]+','+(p[1]+25)+'" fill="#B8856C" opacity="0.15"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u6536\u8936</text>';
+  },
+  tuck: function(area) {
+    // 折裥：小型折叠标记
+    var pts = {neck:[100,38],shoulder:[85,48],chest:[100,75],waist:[100,117],hip:[100,180],hem:[100,228],side:[60,120],back:[100,105],full:[100,100]};
+    var p = pts[area] || pts.full;
+    var s = '';
+    for (var i = 0; i < 3; i++) {
+      var y = p[1] - 12 + i * 14;
+      s += '<path d="M'+(p[0]-12)+','+y+' L'+p[0]+','+(y+5)+' L'+(p[0]+12)+','+y+'" fill="none" stroke="#B8856C" stroke-width="1.3"/>';
+      s += '<line x1="'+p[0]+'" y1="'+(y+5)+'" x2="'+p[0]+'" y2="'+(y+9)+'" stroke="#B8856C" stroke-width="0.8" stroke-dasharray="2 2"/>';
+    }
+    s += '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u6298\u88E5</text>';
+    return s;
+  },
+  dart: function(area) {
+    // 省道：V形收缩线
+    var pts = {neck:[100,38],shoulder:[85,48],chest:[100,75],waist:[100,117],hip:[100,180],hem:[100,228],side:[60,120],back:[100,105],full:[100,100]};
+    var p = pts[area] || pts.full;
+    return '<line x1="'+(p[0]-15)+'" y1="'+(p[1]-20)+'" x2="'+p[0]+'" y2="'+(p[1]+15)+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<line x1="'+(p[0]+15)+'" y1="'+(p[1]-20)+'" x2="'+p[0]+'" y2="'+(p[1]+15)+'" stroke="#B8856C" stroke-width="1.5"/>'
+      + '<circle cx="'+p[0]+'" cy="'+(p[1]+15)+'" r="2.5" fill="#B8856C"/>'
+      + '<line x1="'+(p[0]-15)+'" y1="'+(p[1]-20)+'" x2="'+(p[0]+15)+'" y2="'+(p[1]-20)+'" stroke="#B8856C" stroke-width="0.8" stroke-dasharray="3 2"/>'
+      + '<path d="M'+(p[0]-8)+','+(p[1]-5)+' L'+p[0]+','+(p[1]+15)+' L'+(p[0]+8)+','+(p[1]-5)+' Z" fill="#B8856C" opacity="0.1"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u7701\u9053</text>';
+  },
+  trim: function(area) {
+    // 修剪/修边：沿边缘的锯齿线
+    var pts = {neck:[100,40],shoulder:[85,50],chest:[100,80],waist:[100,120],hip:[100,185],hem:[100,230],side:[55,130],back:[100,110],full:[100,100]};
+    var p = pts[area] || pts.full;
+    var s = '<line x1="'+(p[0]-20)+'" y1="'+p[1]+'" x2="'+(p[0]+20)+'" y2="'+p[1]+'" stroke="#B8856C" stroke-width="1.5"/>';
+    for (var i = 0; i < 6; i++) {
+      var x = p[0] - 18 + i * 7;
+      s += '<path d="M'+x+','+(p[1]+2)+' L'+(x+3.5)+','+(p[1]+8)+' L'+(x+7)+','+(p[1]+2)+'" fill="none" stroke="#B8856C" stroke-width="1"/>';
+    }
+    s += '<circle cx="'+(p[0]-25)+'" cy="'+(p[1]-5)+'" r="5" fill="none" stroke="#B8856C" stroke-width="1.2"/>';
+    s += '<circle cx="'+(p[0]-25)+'" cy="'+(p[1]+5)+'" r="5" fill="none" stroke="#B8856C" stroke-width="1.2"/>';
+    s += '<line x1="'+(p[0]-20)+'" y1="'+(p[1]-5)+'" x2="'+(p[0]-12)+'" y2="'+p[1]+'" stroke="#B8856C" stroke-width="1.2"/>';
+    s += '<line x1="'+(p[0]-20)+'" y1="'+(p[1]+5)+'" x2="'+(p[0]-12)+'" y2="'+p[1]+'" stroke="#B8856C" stroke-width="1.2"/>';
+    s += '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u4FEE\u526A</text>';
+    return s;
+  },
+  baste: function(area) {
+    // 假缝：虚线缝合标记
+    var pts = {neck:[100,38],shoulder:[85,48],chest:[100,75],waist:[100,117],hip:[100,180],hem:[100,228],side:[58,120],back:[100,105],full:[100,100]};
+    var p = pts[area] || pts.full;
+    return '<path d="M'+(p[0]-20)+','+(p[1]-15)+' L'+(p[0]-20)+','+(p[1]+20)+'" stroke="#B8856C" stroke-width="1.5" stroke-dasharray="6 4"/>'
+      + '<path d="M'+(p[0]+20)+','+(p[1]-15)+' L'+(p[0]+20)+','+(p[1]+20)+'" stroke="#B8856C" stroke-width="1.5" stroke-dasharray="6 4"/>'
+      + '<line x1="'+(p[0]-18)+'" y1="'+(p[1]-5)+'" x2="'+(p[0]-14)+'" y2="'+(p[1]-5)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<line x1="'+(p[0]-18)+'" y1="'+(p[1]+5)+'" x2="'+(p[0]-14)+'" y2="'+(p[1]+5)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<line x1="'+(p[0]+18)+'" y1="'+(p[1]-5)+'" x2="'+(p[0]+14)+'" y2="'+(p[1]-5)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<line x1="'+(p[0]+18)+'" y1="'+(p[1]+5)+'" x2="'+(p[0]+14)+'" y2="'+(p[1]+5)+'" stroke="#B8856C" stroke-width="0.8"/>'
+      + '<path d="M'+(p[0]-5)+','+(p[1]-12)+' L'+(p[0]+5)+','+(p[1]-8)+' L'+(p[0]-5)+','+(p[1]-4)+' L'+(p[0]+5)+','+(p[1])+' L'+(p[0]-5)+','+(p[1]+4)+' L'+(p[0]+5)+','+(p[1]+8)+'" fill="none" stroke="#B8856C" stroke-width="1" stroke-dasharray="2 2"/>'
+      + '<text x="160" y="25" font-size="9" fill="#B8856C" text-anchor="middle">\u5047\u7F1D</text>';
   }
 };
 
@@ -575,11 +673,43 @@ fileInput.addEventListener('change', function(e) { processFile(e.target.files[0]
 $('btn-reselect').addEventListener('click', resetUpload);
 
 /* ====== ANALYZE ====== */
+/* ====== LOADING PROGRESS ====== */
+var loadingStages = [
+  { msg: 'AI 正在识别设计结构...', pct: 10 },
+  { msg: '正在分析版型特征和工艺要点...', pct: 25 },
+  { msg: '正在生成分步操作说明...', pct: 40 },
+  { msg: '正在整理材料清单和工具建议...', pct: 55 },
+  { msg: '正在编写操作贴士和常见问题...', pct: 70 },
+  { msg: '即将完成，请稍候...', pct: 85 },
+  { msg: '内容较复杂，AI 正在仔细分析...', pct: 90 }
+];
+var loadingTimer = null;
+function startLoadingProgress() {
+  var idx = 0;
+  var submsg = $('loading-submsg');
+  var bar = $('loading-progress');
+  if (submsg) submsg.textContent = loadingStages[0].msg;
+  if (bar) bar.style.width = loadingStages[0].pct + '%';
+  loadingTimer = setInterval(function() {
+    idx++;
+    if (idx < loadingStages.length) {
+      if (submsg) { submsg.style.opacity = '0'; setTimeout(function() { submsg.textContent = loadingStages[idx].msg; submsg.style.opacity = '1'; }, 200); }
+      if (bar) bar.style.width = loadingStages[idx].pct + '%';
+    }
+  }, 8000);
+}
+function stopLoadingProgress(success) {
+  if (loadingTimer) { clearInterval(loadingTimer); loadingTimer = null; }
+  var bar = $('loading-progress');
+  if (bar) bar.style.width = success ? '100%' : '0%';
+}
+
 async function analyze() {
   if (!fileBase64) return;
   $('btn-analyze').disabled = true;
   $('btn-analyze').textContent = '分析中...';
   showScreen('loading');
+  startLoadingProgress();
 
   try {
     var controller = new AbortController();
@@ -616,10 +746,12 @@ async function analyze() {
       throw new Error('服务器返回数据格式异常，请重试');
     }
 
+    stopLoadingProgress(true);
     tutorialData = json.tutorial;
     renderTutorial();
     showScreen('tutorial');
   } catch (err) {
+    stopLoadingProgress(false);
     console.error('Analyze error:', err);
     showError(err.message || '分析失败，请重试');
     showScreen('upload');

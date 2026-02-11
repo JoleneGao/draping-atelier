@@ -236,9 +236,17 @@ export default async function handler(req, res) {
     const PROMPT = `你是一位拥有20年经验的立裁（draping）大师和时装设计教育家。请分析这张立裁/服装设计图片，为零基础初学者提供一份完整的、手把手的立裁操作教程。
 
 请用中文回答。严格只返回JSON，不要有任何其他文字、markdown标记或代码块：
-{"designName":"简洁的设计名称","designAnalysis":"2-3句话描述这件设计的核心特征和整体风格","difficulty":3,"difficultyReason":"难度评估原因","estimatedTime":"预计完成时间","materials":[{"item":"材料名","spec":"规格克重质地等","qty":"用量"}],"tools":[{"name":"工具名","purpose":"用途"}],"steps":[{"title":"步骤标题","desc":"详细操作说明，用初学者能理解的语言描述手怎么放、布怎么摆、针怎么插，至少3-4句话","technique":"核心技法","icon":"pin","area":"chest","tips":"操作贴士","troubles":[{"q":"可能的问题","a":"解决方法"}]}]}
+{"designName":"简洁的设计名称","designAnalysis":"2-3句话描述这件设计的核心特征和整体风格","difficulty":3,"difficultyReason":"难度评估原因","estimatedTime":"预计完成时间","materials":[{"item":"白色坯布（胚布）","spec":"纯棉，中等克重，幅宽150cm","qty":"2米"},{"item":"大头针/珠针","spec":"不锈钢，长3cm","qty":"一盒（约50枚）"}],"tools":[{"name":"人台/人体模型","purpose":"作为立裁的基础支撑"},{"name":"裁剪剪刀","purpose":"裁剪布料"},{"name":"软尺","purpose":"测量尺寸"}],"steps":[{"title":"步骤标题","desc":"详细操作说明，用初学者能理解的语言描述手怎么放、布怎么摆、针怎么插，至少3-4句话","technique":"核心技法","icon":"pin","area":"chest","tips":"操作贴士","troubles":[{"q":"可能的问题","a":"解决方法"}]}]}
 
-要求：1.步骤详细，每步只做一个核心动作 2.通俗易懂，专业术语附解释 3.提供8-15个步骤 4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full 5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure 6.所有字符串值内不要包含换行，保持在一行内`;
+要求：
+1.步骤详细，每步只做一个核心动作
+2.通俗易懂，专业术语附解释
+3.提供8-15个步骤
+4.area只能是：neck/shoulder/chest/waist/hip/hem/side/back/full，根据该步骤实际操作区域选择，不要全部用full
+5.icon只能是：pin/scissors/pencil/ruler/hand/fold/iron/measure/drape/wrap/pleat/gather/tuck/dart/trim/baste，其中drape=披挂布料,wrap=裹缠,pleat=打褶,gather=收褶,tuck=折裥,dart=省道,trim=修边,baste=假缝。请根据每步的实际操作选择最匹配的icon，至少使用5种不同的icon，不要全部使用pin
+6.所有字符串值内不要包含换行，保持在一行内
+7.materials必须列出至少3种材料（包括布料、辅料等），每种标明规格和用量
+8.tools必须列出至少3种工具，每种标明具体用途`;
 
     // 构建请求体
     const requestBody = JSON.stringify({
@@ -323,11 +331,23 @@ export default async function handler(req, res) {
     }
 
     // 提取文本内容（加回 prefill 前缀以还原完整 JSON）
-    const rawAiText = (apiData.content || [])
+    let rawAiText = (apiData.content || [])
       .filter(b => b.type === 'text')
       .map(b => b.text)
       .join('');
-    const aiText = '{"designName":"' + rawAiText;
+
+    // 清洗 rawAiText：处理 Claude 可能添加的 markdown 代码块标记
+    rawAiText = rawAiText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
+    rawAiText = rawAiText.trimStart();
+
+    // 检测 Claude 是否重复了 prefill（完整重新开始了 JSON），如果是则不拼接 prefill
+    let aiText;
+    if (/^\s*\{\s*"designName"/.test(rawAiText)) {
+      console.log('Claude repeated prefill, using rawAiText directly');
+      aiText = rawAiText;
+    } else {
+      aiText = '{"designName":"' + rawAiText;
+    }
 
     if (!aiText.trim()) {
       console.error('Claude returned empty text. Full response:', JSON.stringify(apiData).substring(0, 500));
